@@ -12,6 +12,7 @@ export default function HomePage() {
     <main id="main-content">
       <Hero poster="/images/hero-palazzo.jpg" videoSrc="/hero.mp4" />
 
+      <div className="relative z-10">
       <section id="palace" className="botanical florence-art bg-flora-cream pb-28 pt-48 md:pb-44 md:pt-56">
         <div className="container-shell">
           <RevealSection>
@@ -177,6 +178,7 @@ export default function HomePage() {
 
       <section className="botanical botanical-emphasis bg-flora-cream px-4 py-28 md:py-40"><InfoRequestForm /></section>
       <Footer />
+      </div>
     </main>
   );
 }

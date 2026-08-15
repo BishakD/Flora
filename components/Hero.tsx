@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BrandMark } from "./BrandMark";
 
 function BrandIntro({ onComplete }: { onComplete: () => void }) {
@@ -27,8 +27,6 @@ type HeroProps = { poster: string; videoSrc?: string };
 
 export function Hero({ poster, videoSrc }: HeroProps) {
   const reduced = useReducedMotion();
-  const hero = useRef<HTMLElement>(null);
-  const media = useRef<HTMLDivElement>(null);
   const [intro, setIntro] = useState(!reduced);
   const [videoFailed, setVideoFailed] = useState(false);
   const finishIntro = useCallback(() => setIntro(false), []);
@@ -40,19 +38,6 @@ export function Hero({ poster, videoSrc }: HeroProps) {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = original; };
   }, [intro]);
-  useEffect(() => {
-    if (!hero.current || !media.current || reduced) return;
-    let cleanup = () => undefined;
-    void (async () => {
-      const { gsap } = await import("gsap");
-      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
-      gsap.registerPlugin(ScrollTrigger);
-      if (!hero.current || !media.current) return;
-      const tween = gsap.to(media.current, { yPercent: 18, ease: "none", scrollTrigger: { trigger: hero.current, start: "top top", end: "bottom top", scrub: 0.55 } });
-      cleanup = () => { tween.scrollTrigger?.kill(); tween.kill(); };
-    });
-    return () => cleanup();
-  }, [reduced]);
 
   const useVideo = Boolean(videoSrc && !reduced && !videoFailed);
   const delay = reduced ? 0 : 2.58;
@@ -60,8 +45,8 @@ export function Hero({ poster, videoSrc }: HeroProps) {
   return (
     <>
       <AnimatePresence>{intro ? <BrandIntro onComplete={finishIntro} /> : null}</AnimatePresence>
-      <section ref={hero} className="relative mt-[var(--nav-height)] min-h-[calc(100svh-var(--nav-height))] overflow-hidden bg-flora-navy" aria-label="Flora in Florence">
-        <motion.div ref={media} className="absolute -inset-x-[3%] -inset-y-[6%] will-change-transform" initial={reduced ? false : { opacity: 0, scale: 1.025 }} animate={{ opacity: 1, scale: reduced ? 1 : 1.045 }} transition={{ opacity: { duration: 0.6, delay }, scale: { duration: 12, delay, ease: "linear" } }}>
+      <section className="sticky top-[var(--nav-height)] z-0 mt-[var(--nav-height)] h-[calc(100svh-var(--nav-height))] overflow-hidden bg-flora-navy" aria-label="Flora in Florence">
+        <motion.div className="absolute inset-0" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay }}>
           {useVideo ? <video className="size-full object-cover" src={videoSrc} poster={poster} autoPlay muted loop playsInline preload="metadata" onError={() => setVideoFailed(true)} aria-label="Flora palazzo film" /> : <Image src={poster} alt="Florence illuminated at blue hour, an editorial placeholder for Flora's future hero film" fill preload sizes="100vw" className="object-cover" />}
         </motion.div>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(27,42,63,.04),rgba(27,42,63,.08)_58%,rgba(27,42,63,.52))]" />
