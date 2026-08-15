@@ -22,6 +22,9 @@ const config: Config = {
           charcoal: "var(--flora-charcoal-text)",
           grey: "var(--flora-warm-grey)",
           line: "var(--flora-line)",
+          ice: "var(--flora-ice)",
+          sage: "var(--flora-sage)",
+          powder: "var(--flora-powder)",
         },
       },
       fontFamily: {

@@ -201,8 +201,8 @@ export function BookingFlow({ initialAdults = 2, initialChildren = 0, initialChe
     <div>
       <section className="sticky top-[var(--nav-height)] z-30 border-y border-flora-line bg-flora-cream/95 shadow-[0_12px_40px_rgba(43,32,22,.08)] backdrop-blur-md">
         <div className="container-shell flex min-h-16 items-center justify-between gap-5 py-3">
-          <p className="eyebrow text-flora-slate">Booking prototype · no live inventory</p>
-          <p className="font-sans text-[0.62rem] uppercase tracking-[0.11em]">Your cart: <span className="text-flora-terracotta">{cart.length} {cart.length === 1 ? "item" : "items"}</span></p>
+          <p className="eyebrow text-flora-slate"><span className="md:hidden">Booking prototype</span><span className="hidden md:inline">Booking prototype · no live inventory</span></p>
+          <p className="whitespace-nowrap font-sans text-[0.54rem] uppercase tracking-[0.1em] sm:text-[0.62rem] sm:tracking-[0.11em]">Your cart: <span className="text-flora-terracotta">{cart.length} {cart.length === 1 ? "item" : "items"}</span></p>
         </div>
       </section>
 

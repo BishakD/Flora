@@ -94,16 +94,43 @@ type SectionTitleScriptProps = {
 export function SectionTitleScript({ children, className = "", as = "h2" }: SectionTitleScriptProps) {
   const reduced = useReducedMotion();
   const Tag = motion[as];
+  const ink = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!ink.current || reduced) return;
+    let cleanup = () => undefined;
+    void (async () => {
+      const { gsap } = await import("gsap");
+      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+      gsap.registerPlugin(ScrollTrigger);
+      if (!ink.current) return;
+      gsap.set(ink.current, { clipPath: "inset(0 100% 0 0)" });
+      const tween = gsap.to(ink.current, {
+        clipPath: "inset(0 0% 0 0)",
+        ease: "none",
+        scrollTrigger: {
+          trigger: ink.current,
+          start: "top 86%",
+          end: "bottom 48%",
+          scrub: 0.38,
+          invalidateOnRefresh: true,
+        },
+      });
+      cleanup = () => { tween.scrollTrigger?.kill(); tween.kill(); };
+    });
+    return () => cleanup();
+  }, [children, reduced]);
 
   return (
     <Tag
-      className={`script-title ${className}`}
-      initial={reduced ? false : { opacity: 0, y: 22 }}
+      className={`script-title relative ${className}`}
+      initial={reduced ? false : { opacity: 0, y: 12 }}
       whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.65 }}
-      transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: false, amount: 0.32 }}
+      transition={{ duration: 0.46, ease: [0.22, 1, 0.36, 1] }}
     >
-      {children}
+      <span className="script-swash" aria-hidden="true" />
+      <span ref={ink} className="relative z-[1] block will-change-[clip-path]">{children}</span>
     </Tag>
   );
 }
@@ -177,7 +204,7 @@ export function ParallaxImage({
   return (
     <div ref={wrap} className={`relative overflow-hidden ${className}`}>
       <div ref={image} className="absolute -inset-[8%] will-change-transform">
-        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={`object-cover ${imageClassName}`} />
+        <Image src={src} alt={alt} fill sizes={sizes} preload={priority} className={`object-cover ${imageClassName}`} />
       </div>
     </div>
   );
@@ -189,6 +216,7 @@ export function BlurRevealImage({
   className = "",
   imageClassName = "",
   sizes = "(min-width: 768px) 42vw, 92vw",
+  priority = false,
 }: MotionImageProps) {
   const wrap = useRef<HTMLDivElement>(null);
   const image = useRef<HTMLDivElement>(null);
@@ -230,7 +258,7 @@ export function BlurRevealImage({
   return (
     <div ref={wrap} className={`relative overflow-hidden ${className}`}>
       <div ref={image} className="absolute inset-0 will-change-[filter,transform,opacity]">
-        <Image src={src} alt={alt} fill sizes={sizes} className={`object-cover ${imageClassName}`} />
+        <Image src={src} alt={alt} fill sizes={sizes} preload={priority} className={`object-cover ${imageClassName}`} />
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export default async function BookingPage({ searchParams }: { searchParams: Book
   return (
     <main id="main-content" className="mt-[var(--nav-height)]">
       <header className="relative min-h-[52svh] overflow-hidden bg-flora-navy text-flora-cream">
-        <Image src="/images/room-05.jpg" alt="A refined suite interior, placeholder for Flora booking" fill priority sizes="100vw" className="object-cover" />
+        <Image src="/images/room-05.jpg" alt="A refined suite interior, placeholder for Flora booking" fill preload sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-flora-navy/58" />
         <div className="container-shell relative z-10 flex min-h-[52svh] flex-col justify-center py-20">
           <p className="eyebrow text-flora-gold">Stay at Flora</p>

@@ -16,8 +16,11 @@
   --flora-charcoal-text: #2a2a28;
   --flora-warm-grey: #6b6660;
   --flora-line: #dcd3c4;
+  --flora-ice: #f1f5f7;
+  --flora-sage: #d4d9d1;
+  --flora-powder: #9cb6c5;
   --font-body: var(--font-display);
-  --nav-height: 68px;
+  --nav-height: 56px;
 }
 
 * {
@@ -38,7 +41,7 @@ body {
   background: var(--flora-cream);
   color: var(--flora-charcoal-text);
   font-family: var(--font-body), Georgia, serif;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.65;
   text-rendering: optimizeLegibility;
 }
@@ -96,11 +99,11 @@ a {
 }
 
 .section-pad {
-  padding-block: clamp(5rem, 11vw, 10rem);
+  padding-block: clamp(6.25rem, 12vw, 11rem);
 }
 
 .container-shell {
-  width: min(100% - 36px, 1240px);
+  width: min(100% - 40px, 1080px);
   margin-inline: auto;
 }
 
@@ -126,6 +129,23 @@ a {
   font-weight: 400;
   line-height: 0.95;
   text-wrap: balance;
+}
+
+.script-swash {
+  position: absolute;
+  z-index: 0;
+  left: 7%;
+  right: 3%;
+  bottom: 3%;
+  height: 30%;
+  opacity: 0.58;
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--flora-rose-dust) 58%, transparent) 8%, color-mix(in srgb, var(--flora-gold) 38%, transparent) 54%, transparent 96%);
+  clip-path: polygon(0 36%, 12% 22%, 28% 31%, 43% 14%, 63% 30%, 78% 16%, 100% 34%, 96% 72%, 74% 66%, 56% 84%, 34% 70%, 15% 82%, 2% 68%);
+  filter: blur(0.5px);
+}
+
+.script-no-swash .script-swash {
+  display: none;
 }
 
 .textured {
@@ -157,10 +177,10 @@ a {
   inset: -8%;
   content: "";
   pointer-events: none;
-  opacity: 0.42;
-  background-image: url("data:image/svg+xml,%3Csvg width='760' height='760' viewBox='0 0 760 760' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23b9837b' stroke-width='1.1' opacity='.16'%3E%3Cpath d='M67 732C94 553 175 451 303 342 405 255 472 166 511 31M166 588c-44-50-69-104-73-164 62 18 111 52 147 102M250 410c-4-73 17-132 63-179 35 60 45 122 30 187M392 250c10-55 40-96 92-124 18 54 13 104-14 151M97 617c-47-10-81-35-105-74 43-19 86-17 130 8M444 173c-14-42-7-81 21-116 37 28 57 65 58 109'/%3E%3Cpath d='M717 88C608 170 551 273 541 395c-11 131-72 230-183 299M639 159c51 11 91 39 119 85-50 21-99 17-147-11M569 288c56 26 92 68 107 126-62 3-113-17-153-61M525 442c-59 6-105 33-139 80 54 28 108 29 161 3M441 584c-42-7-80 4-114 34 27 40 66 59 116 58'/%3E%3Cpath d='M281 95c-38 26-57 62-56 109 46-3 82-25 107-66-10-26-27-40-51-43ZM174 274c-42 12-71 39-88 81 43 13 83 4 119-29 2-25-8-43-31-52ZM627 514c-25 39-26 80-4 123 41-22 65-57 71-105-20-21-43-27-67-18Z'/%3E%3C/g%3E%3C/svg%3E");
-  background-position: center;
-  background-size: min(760px, 90vw);
+  opacity: 0.72;
+  background-image: url("data:image/svg+xml,%3Csvg width='620' height='520' viewBox='0 0 620 520' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23b9837b' stroke-width='.8' opacity='.105'%3E%3Cpath d='M18 500C82 412 132 327 153 211 165 145 194 82 247 21M75 413c-34-15-55-41-65-77 40 0 69 16 88 47M124 321c-25-34-30-69-15-106 35 21 53 52 53 94M170 219c8-42 30-74 67-96 14 42 8 79-17 111M606 25C531 95 493 181 493 283c0 87-29 163-88 227M542 109c38 4 68 23 91 57-35 21-72 23-109 6M501 218c41 18 67 49 77 91-45 5-82-8-111-39M486 338c-39 8-69 29-90 64 38 20 75 18 111-6'/%3E%3Cpath d='M294 63c-26 18-39 42-38 73 31-2 55-17 72-45-7-17-18-26-34-28ZM364 364c-31 8-52 28-63 59 32 9 61 2 86-22 1-18-7-31-23-37Z'/%3E%3Cpath d='M344 120c9-13 21-16 36-9-2 16-11 25-26 29-10-4-14-11-10-20ZM318 139c-14-6-25-2-33 11 8 13 20 18 35 14 7-8 6-17-2-25Z'/%3E%3Ccircle cx='344' cy='139' r='3'/%3E%3Cpath d='M279 437c12-11 26-13 41-6-5 16-16 25-33 26-9-5-12-12-8-20Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: center top;
+  background-size: min(620px, 86vw);
   background-repeat: repeat;
 }
 
@@ -171,8 +191,45 @@ a {
 
 .arch-frame {
   overflow: hidden;
-  border-radius: 50% 50% 1.25rem 1.25rem / 22% 22% 1.25rem 1.25rem;
+  border-radius: 0 0 1.25rem 1.25rem;
+  -webkit-mask:
+    radial-gradient(ellipse 38% 18% at 50% 18%, #000 99%, transparent 100%) 0 0 / 100% 36% no-repeat,
+    linear-gradient(#000 0 0) 0 18% / 100% 82% no-repeat;
+  mask:
+    radial-gradient(ellipse 38% 18% at 50% 18%, #000 99%, transparent 100%) 0 0 / 100% 36% no-repeat,
+    linear-gradient(#000 0 0) 0 18% / 100% 82% no-repeat;
 }
+
+.notched-button,
+.room-title-pill {
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, calc(100% - 8px) 5px, 100% 9px, 100% calc(100% - 9px), calc(100% - 8px) calc(100% - 5px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 5px), 0 calc(100% - 9px), 0 9px, 8px 5px);
+}
+
+.ornamental-panel {
+  clip-path: polygon(22px 0, calc(100% - 22px) 0, calc(100% - 22px) 10px, calc(100% - 10px) 22px, 100% 22px, 100% calc(100% - 22px), calc(100% - 10px) calc(100% - 22px), calc(100% - 22px) calc(100% - 10px), calc(100% - 22px) 100%, 22px 100%, 22px calc(100% - 10px), 10px calc(100% - 22px), 0 calc(100% - 22px), 0 22px, 10px 22px, 22px 10px);
+}
+
+.loader-cloud::before {
+  position: absolute;
+  inset: -15%;
+  content: "";
+  background: radial-gradient(ellipse at 18% 72%, rgba(246,241,231,.2), transparent 34%), radial-gradient(ellipse at 76% 18%, rgba(234,211,205,.18), transparent 38%), radial-gradient(ellipse at 52% 54%, rgba(253,251,246,.08), transparent 43%);
+  filter: blur(30px);
+  animation: cloud-drift 7s ease-in-out infinite alternate;
+}
+
+.loader-speck {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(253,251,246,.78);
+  box-shadow: 0 0 7px rgba(253,251,246,.42);
+  animation: speck-float 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes cloud-drift { to { transform: translate3d(3%, -2%, 0) scale(1.05); } }
+@keyframes speck-float { to { transform: translate3d(4px, -12px, 0); opacity: .28; } }
 
 .luxury-button {
   position: relative;
@@ -288,11 +345,11 @@ a {
   }
 
   body {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .section-pad {
-    padding-block: 4rem;
+    padding-block: 4.75rem;
   }
 
   .container-shell {

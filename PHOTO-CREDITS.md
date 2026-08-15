@@ -1,6 +1,6 @@
 # Placeholder photo credits
 
-All photography in `public/images` is temporary and swappable. The site must use final property-specific assets before publication. The images were sourced from Unsplash during development and are used under the [Unsplash License](https://unsplash.com/license).
+All photography in `public/images` is temporary and swappable. The site must use final property-specific assets before publication. The images were sourced from Unsplash and Pexels during development and are used under the [Unsplash License](https://unsplash.com/license) or [Pexels License](https://www.pexels.com/license/), as listed below.
 
 Key searched and selected sources:
 
@@ -20,5 +20,6 @@ Key searched and selected sources:
 - `spa-04.jpg` — [Maximilien T'Scharner, spa study](https://unsplash.com/photos/FD0Ga_KJTwM)
 - `spa-06.jpg` — [Roberto Nickson, wellness study](https://unsplash.com/photos/YCW4BEhKluw)
 - `spa-07.jpg` — [Anna Rosar, spa interior](https://unsplash.com/photos/uI5WSGDdkhQ)
+- `spa-palazzo.jpg` — [Tugce Erten Barrett, arched massage room](https://www.pexels.com/photo/interior-design-of-a-massage-room-11774389/)
 
 Additional placeholders were selected from the [luxury hotel interior](https://unsplash.com/s/photos/luxury-hotel-interior), [luxury restaurant](https://unsplash.com/s/photos/luxury-restaurant), [luxury spa](https://unsplash.com/s/photos/luxury-spa), and [Florence](https://unsplash.com/s/photos/florence-italy) collections.

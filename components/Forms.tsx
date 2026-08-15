@@ -12,25 +12,32 @@ export function InfoRequestForm() {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-3xl border border-flora-line bg-flora-ivory p-7 shadow-soft sm:p-12" aria-labelledby="request-title">
-      <div className="flex flex-col items-center text-center">
-        <BrandMark />
-        <p className="eyebrow mt-5 text-flora-gold">Your stay, considered</p>
-        <h2 id="request-title" className="mt-3 font-display text-[clamp(2.8rem,6vw,5rem)] leading-none">Info request</h2>
-        <p className="mt-5 max-w-lg text-lg leading-relaxed text-flora-grey">Share the shape of your Florence stay. This editorial prototype does not send data yet.</p>
+    <form onSubmit={submit} className="relative mx-auto max-w-[900px] border border-flora-line/70 bg-flora-ivory px-7 py-9 shadow-[0_14px_50px_rgba(43,32,22,.06)] sm:px-12 sm:py-11" aria-labelledby="request-title">
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <p className="eyebrow text-flora-blue">Your stay, considered</p>
+          <h2 id="request-title" className="mt-2 font-display text-[clamp(2.3rem,5vw,4.4rem)] uppercase leading-none tracking-[0.03em]">Info request</h2>
+        </div>
+        <div className="border border-dashed border-flora-blue/60 bg-flora-blue p-2 text-flora-ivory shadow-soft"><BrandMark inverse className="scale-[.65]" /></div>
       </div>
-      <div className="mt-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
-        <label className="block"><span className="eyebrow text-flora-grey">Name</span><input required name="name" autoComplete="name" className="field" placeholder="Your name" /></label>
-        <label className="block"><span className="eyebrow text-flora-grey">Email</span><input required name="email" type="email" autoComplete="email" className="field" placeholder="you@example.com" /></label>
-        <label className="block"><span className="eyebrow text-flora-grey">Preferred arrival</span><input name="arrival" type="date" className="field" /></label>
-        <label className="block"><span className="eyebrow text-flora-grey">Preferred departure</span><input name="departure" type="date" className="field" /></label>
-        <label className="block sm:col-span-2"><span className="eyebrow text-flora-grey">Message</span><textarea required name="message" className="field min-h-28 resize-y" placeholder="Tell us what would make the stay feel entirely yours." /></label>
+
+      <div className="mt-10 grid gap-9 md:grid-cols-[0.92fr_1.08fr] md:gap-12">
+        <label className="block"><span className="eyebrow text-flora-grey">Message</span><textarea required name="message" className="mt-3 min-h-[270px] w-full resize-y border border-flora-line bg-transparent p-4 outline-none transition-colors focus:border-flora-slate" placeholder="Tell us what would make the stay feel entirely yours." /></label>
+
+        <div className="relative grid content-start gap-x-6 gap-y-5 sm:grid-cols-2">
+          <label className="block"><span className="eyebrow text-flora-grey">Name</span><input required name="name" autoComplete="given-name" className="field" /></label>
+          <label className="block"><span className="eyebrow text-flora-grey">Surname</span><input required name="surname" autoComplete="family-name" className="field" /></label>
+          <label className="block"><span className="eyebrow text-flora-grey">Check in</span><input name="arrival" type="date" className="field" /></label>
+          <label className="block"><span className="eyebrow text-flora-grey">Check out</span><input name="departure" type="date" className="field" /></label>
+          <label className="block"><span className="eyebrow text-flora-grey">Guests</span><input name="guests" type="number" min="1" max="8" className="field" /></label>
+          <label className="block"><span className="eyebrow text-flora-grey">Rooms</span><input name="rooms" type="number" min="1" max="4" className="field" /></label>
+          <label className="block sm:col-span-2"><span className="eyebrow text-flora-grey">Email</span><input required name="email" type="email" autoComplete="email" className="field" /></label>
+          <label className="block sm:col-span-2"><span className="eyebrow text-flora-grey">Mobile</span><input name="mobile" type="tel" autoComplete="tel" className="field" /></label>
+          <label className="mt-1 flex items-start gap-3 font-sans text-[0.55rem] leading-relaxed tracking-[0.07em] text-flora-grey sm:col-span-2"><input required type="checkbox" className="mt-1 accent-flora-slate" />I agree to the final privacy notice once supplied. No information is transmitted in this prototype.</label>
+          <div className="sm:col-span-2 sm:text-center"><button type="submit" className="notched-button min-w-[142px] border border-flora-slate bg-flora-cream px-7 py-3 font-sans text-[0.58rem] uppercase tracking-[0.14em] text-flora-slate transition-colors hover:bg-flora-slate hover:text-flora-ivory">Send</button></div>
+        </div>
       </div>
-      <div className="mt-8 flex flex-col items-center gap-4">
-        <button type="submit" className="luxury-button border-flora-slate text-flora-slate [--button-fill:var(--flora-slate-blue-deep)]">Send request</button>
-        <p className="max-w-xl text-center font-sans text-[0.58rem] leading-relaxed tracking-[0.08em] text-flora-grey">By submitting, you agree to the final hotel privacy notice once supplied. No information is transmitted in this prototype.</p>
-        {status ? <p className="rounded-full bg-flora-cream px-5 py-3 text-center text-sm text-flora-slate" role="status">{status}</p> : null}
-      </div>
+      {status ? <p className="mt-7 border-l-2 border-flora-blue pl-4 text-sm text-flora-slate" role="status">{status}</p> : null}
     </form>
   );
 }

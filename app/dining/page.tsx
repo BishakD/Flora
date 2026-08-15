@@ -12,7 +12,7 @@ export default function DiningPage() {
   return (
     <main id="main-content" className="mt-[var(--nav-height)]">
       <section className="relative min-h-[82svh] overflow-hidden bg-flora-navy text-flora-cream">
-        <ParallaxImage src="/images/dining-03.jpg" alt="A warmly lit restaurant interior, editorial placeholder for Flora dining" className="absolute inset-0" priority />
+        <ParallaxImage src="/images/dining-03.jpg" alt="A warmly lit restaurant interior, editorial placeholder for Flora dining" className="!absolute inset-0" priority />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(27,42,63,.76),rgba(27,42,63,.12),rgba(27,42,63,.54))]" />
         <div className="container-shell relative z-10 flex min-h-[82svh] items-center py-24">
           <div className="max-w-3xl">
@@ -74,7 +74,7 @@ export default function DiningPage() {
       </section>
 
       <section className="relative min-h-[88svh] overflow-hidden bg-flora-navy text-flora-cream">
-        <ParallaxImage src="/images/hero-palazzo.jpg" alt="Florence at night, placeholder view from Flora's rooftop" className="absolute inset-0" />
+        <ParallaxImage src="/images/hero-palazzo.jpg" alt="Florence at night, placeholder view from Flora's rooftop" className="!absolute inset-0" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(27,42,63,.10),rgba(27,42,63,.72))]" />
         <div className="container-shell relative z-10 flex min-h-[88svh] items-end py-24">
           <div className="max-w-2xl">

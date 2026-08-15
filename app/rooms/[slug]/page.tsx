@@ -31,7 +31,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
         <div className="grid h-[52svh] min-h-[440px] grid-cols-[0.7fr_1.6fr_0.7fr] gap-2 overflow-hidden md:gap-4">
           {room.images.slice(0, 3).map((image, index) => (
             <div key={image} className="relative overflow-hidden">
-              <Image src={image} alt={`${room.name}, editorial placeholder header view ${index + 1}`} fill sizes={index === 1 ? "60vw" : "24vw"} priority className="object-cover transition-transform duration-[8s] ease-linear hover:scale-[1.04]" />
+              <Image src={image} alt={`${room.name}, editorial placeholder header view ${index + 1}`} fill sizes={index === 1 ? "60vw" : "24vw"} preload={index === 1} className="object-cover transition-transform duration-[8s] ease-linear hover:scale-[1.04]" />
               <div className="absolute inset-0 bg-flora-navy/5" />
             </div>
           ))}

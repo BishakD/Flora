@@ -18,36 +18,35 @@ const rituals = [
 export default function SpaPage() {
   return (
     <main id="main-content" className="mt-[var(--nav-height)]">
-      <section className="relative min-h-[82svh] overflow-hidden bg-flora-blue text-flora-cream">
-        <ParallaxImage src="/images/spa-04.jpg" alt="A calm luxury wellness setting, editorial placeholder for Flora Spa" className="absolute inset-0" priority />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(63,80,100,.78),rgba(63,80,100,.18),rgba(27,42,63,.45))]" />
-        <div className="container-shell relative z-10 flex min-h-[82svh] items-center py-24">
+      <section className="botanical textured bg-flora-sage text-flora-charcoal">
+        <div className="container-shell grid min-h-[82svh] items-center gap-12 py-20 md:grid-cols-[1.02fr_0.98fr] md:py-24 lg:gap-20">
           <div className="max-w-3xl">
-            <p className="eyebrow text-flora-cream/72">Below the palazzo</p>
-            <SectionTitleScript as="h1" className="mt-3 text-[clamp(5.8rem,15vw,12rem)]">The Spa</SectionTitleScript>
-            <p className="mt-7 max-w-xl text-[clamp(1.3rem,2.3vw,2rem)] leading-relaxed text-flora-cream/88">A quiet architecture of stone, linen, warmth and time.</p>
+            <p className="eyebrow text-flora-slate">Below the palazzo</p>
+            <SectionTitleScript as="h1" className="script-no-swash mt-3 text-[clamp(5.8rem,15vw,11rem)]">The Spa</SectionTitleScript>
+            <p className="mt-7 max-w-xl text-[clamp(1.3rem,2.3vw,2rem)] leading-relaxed text-flora-slate">A quiet architecture of stone, linen, warmth and time.</p>
           </div>
+          <BlurRevealImage src="/images/spa-palazzo.jpg" alt="A softly illuminated arched treatment room in pale mineral plaster" className="arch-frame mx-auto aspect-[0.74] w-full max-w-[500px]" priority />
         </div>
       </section>
 
-      <section className="botanical textured section-pad bg-flora-blue text-flora-cream">
+      <section className="botanical textured section-pad bg-flora-cream">
         <div className="container-shell grid items-center gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
           <div>
-            <p className="eyebrow text-flora-cream/70">Wellness rituals</p>
+            <p className="eyebrow text-flora-slate">Wellness rituals</p>
             <h2 className="display-title mt-4 text-[clamp(3.4rem,6.7vw,6.6rem)]">Return to your own rhythm</h2>
-            <ScrollRevealText dark className="mt-7 text-[clamp(1.25rem,2vw,1.75rem)] leading-[1.75]">
+            <ScrollRevealText className="mt-7 text-[clamp(1.25rem,2vw,1.75rem)] leading-[1.75]">
               Flora’s wellness rooms are imagined as a sensory counterpoint to the city: pale mineral surfaces, warm brass sconces, folded white linen and treatments guided by how the guest arrives that day. Final treatment names, durations and practitioners remain to be confirmed.
             </ScrollRevealText>
           </div>
-          <BlurRevealImage src="/images/spa-06.jpg" alt="A serene spa interior in cool blue-grey tones, editorial placeholder" className="arch-frame aspect-[0.82] w-full max-w-[600px] justify-self-end" />
+          <BlurRevealImage src="/images/spa-05.jpg" alt="Botanical oils and candlelight prepared for a wellness ritual" className="arch-frame aspect-[0.82] w-full max-w-[600px] justify-self-end" />
         </div>
       </section>
 
-      <section className="section-pad bg-flora-cream">
+      <section className="section-pad bg-flora-sage">
         <div className="container-shell">
           <div className="grid items-end gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
             <div className="grid grid-cols-2 gap-4">
-              <BlurRevealImage src="/images/spa-02.jpg" alt="Spa pool and relaxation atmosphere, placeholder" className="col-span-2 aspect-[1.5]" />
+              <BlurRevealImage src="/images/spa-01.jpg" alt="Fresh linen, candlelight and flowers prepared for a treatment" className="col-span-2 aspect-[1.5]" imageClassName="object-[center_58%]" />
               <BlurRevealImage src="/images/spa-01.jpg" alt="Folded towel and floral spa detail" className="aspect-[0.9]" />
               <BlurRevealImage src="/images/spa-03.jpg" alt="Hot stone wellness ritual" className="mt-16 aspect-[0.9]" />
             </div>
@@ -82,7 +81,7 @@ export default function SpaPage() {
       </section>
 
       <section className="relative min-h-[70svh] overflow-hidden bg-flora-navy text-flora-cream">
-        <ParallaxImage src="/images/spa-08.jpg" alt="A restorative wellness moment, editorial placeholder" className="absolute inset-0" />
+        <ParallaxImage src="/images/spa-08.jpg" alt="A restorative wellness moment, editorial placeholder" className="!absolute inset-0" />
         <div className="absolute inset-0 bg-flora-navy/55" />
         <div className="container-shell relative z-10 flex min-h-[70svh] items-center justify-center py-24 text-center">
           <RevealSection className="max-w-3xl">

@@ -24,8 +24,8 @@ export function RoomCard({ room, onOpen }: { room: Room; onOpen: (room: Room) =>
   }
 
   return (
-    <article className="group relative min-w-[88%] overflow-hidden bg-flora-navy shadow-soft transition duration-500 ease-luxury hover:-translate-y-1 hover:shadow-lift sm:min-w-[70%] md:min-w-[calc((100%-2rem)/3)]">
-      <div className="relative aspect-[0.76] overflow-hidden">
+    <article className="group relative min-w-[88%] snap-start overflow-hidden bg-flora-navy transition duration-500 ease-luxury sm:min-w-[70%] md:min-w-[calc((100%_-_2rem)/3)]">
+      <div className="relative aspect-[0.775] overflow-hidden">
         <AnimatePresence initial={false} mode="sync">
           <motion.div
             key={room.images[imageIndex]}
@@ -38,32 +38,20 @@ export function RoomCard({ room, onOpen }: { room: Room; onOpen: (room: Room) =>
             <Image src={room.images[imageIndex]} alt={`${room.name}, editorial placeholder view ${imageIndex + 1}`} fill sizes="(min-width: 768px) 34vw, 88vw" className="object-cover transition-transform duration-[900ms] ease-luxury group-hover:scale-[1.03]" />
           </motion.div>
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-t from-flora-navy/90 via-flora-navy/5 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 z-10 p-6 text-flora-cream">
-          <p className="mb-3 translate-y-4 font-body text-[1.05rem] leading-relaxed opacity-0 transition duration-500 ease-luxury group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-            {room.summary}
-          </p>
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="eyebrow text-flora-cream/65">{room.size} · {room.occupancy}</p>
-              <h3 className="mt-2 font-display text-[clamp(1.7rem,3vw,2.35rem)] leading-none">{room.name}</h3>
-            </div>
-            <button type="button" className="grid size-11 shrink-0 place-items-center rounded-full border border-flora-cream/45 transition-colors hover:bg-flora-cream hover:text-flora-navy" onClick={() => onOpen(room)} aria-label={`Quick view ${room.name}`}>
-              +
-            </button>
-          </div>
-        </div>
+        <div className="absolute inset-0 bg-flora-espresso/0 transition-colors duration-[380ms] group-hover:bg-flora-espresso/52 group-focus-within:bg-flora-espresso/52" />
+        <p className="absolute inset-x-7 top-1/2 z-10 -translate-y-[38%] text-center text-[1.03rem] leading-[1.65] text-flora-cream opacity-0 transition duration-[380ms] ease-luxury group-hover:-translate-y-1/2 group-hover:opacity-100 group-focus-within:-translate-y-1/2 group-focus-within:opacity-100">{room.summary}</p>
+        <button type="button" className="room-title-pill absolute bottom-6 left-1/2 z-20 min-w-[150px] -translate-x-1/2 bg-flora-ivory px-5 py-2.5 text-center font-sans text-[0.55rem] uppercase tracking-[0.13em] text-flora-charcoal shadow-soft" onClick={() => onOpen(room)} aria-label={`Quick view ${room.name}`}>{room.name}</button>
 
-        <div className="absolute left-4 right-4 top-4 z-10 flex items-center justify-between text-flora-cream">
-          <button type="button" className="grid size-10 place-items-center rounded-full bg-flora-navy/35 backdrop-blur-sm" onClick={() => changeImage(-1)} aria-label={`Previous ${room.name} image`}>
+        <div className="absolute left-2 right-2 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between text-flora-cream opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+          <button type="button" className="grid size-11 place-items-center drop-shadow-[0_2px_8px_rgba(27,42,63,.5)]" onClick={() => changeImage(-1)} aria-label={`Previous ${room.name} image`}>
             <ArrowIcon direction="left" />
           </button>
-          <button type="button" className="grid size-10 place-items-center rounded-full bg-flora-navy/35 backdrop-blur-sm" onClick={() => changeImage(1)} aria-label={`Next ${room.name} image`}>
+          <button type="button" className="grid size-11 place-items-center drop-shadow-[0_2px_8px_rgba(27,42,63,.5)]" onClick={() => changeImage(1)} aria-label={`Next ${room.name} image`}>
             <ArrowIcon />
           </button>
         </div>
 
-        <div className="absolute left-1/2 top-5 z-10 flex -translate-x-1/2 gap-1.5" aria-label={`Image ${imageIndex + 1} of 3`}>
+        <div className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 gap-1.5" aria-label={`Image ${imageIndex + 1} of 3`}>
           {room.images.slice(0, 3).map((image, dotIndex) => (
             <button key={image} type="button" className={`h-1.5 rounded-full transition-all ${dotIndex === imageIndex ? "w-5 bg-flora-cream" : "w-1.5 bg-flora-cream/50"}`} onClick={() => setImageIndex(dotIndex)} aria-label={`Show image ${dotIndex + 1}`} />
           ))}
@@ -125,6 +113,7 @@ function RoomQuickView({ room, onClose }: { room: Room | null; onClose: () => vo
   useEffect(() => {
     if (!room) return;
     const original = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
     closeButton.current?.focus();
     const onKey = (event: KeyboardEvent) => {
@@ -148,6 +137,7 @@ function RoomQuickView({ room, onClose }: { room: Room | null; onClose: () => vo
     return () => {
       document.body.style.overflow = original;
       window.removeEventListener("keydown", onKey);
+      previousFocus?.focus();
     };
   }, [room, onClose]);
 
@@ -156,29 +146,31 @@ function RoomQuickView({ room, onClose }: { room: Room | null; onClose: () => vo
   return createPortal(
     <AnimatePresence>
       {room ? (
-        <motion.div className="fixed inset-0 z-[100] grid place-items-center bg-flora-navy/55 p-0 backdrop-blur-xl md:p-8" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-          <motion.div role="dialog" aria-modal="true" aria-labelledby="quick-view-title" className="relative grid h-full w-full max-w-[1180px] overflow-y-auto bg-flora-ivory md:h-[min(90vh,820px)] md:grid-cols-[0.86fr_1.14fr]" initial={reduced ? false : { opacity: 0, y: 36, scale: 0.975 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 18, scale: 0.985 }} transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}>
-            <button ref={closeButton} type="button" className="fixed right-4 top-4 z-[110] grid size-11 place-items-center rounded-full border border-flora-line bg-flora-ivory/95 font-sans text-lg shadow-soft backdrop-blur" onClick={onClose} aria-label="Close room quick view">
+        <motion.div className="fixed inset-0 z-[100] grid place-items-center bg-flora-espresso/38 p-0 backdrop-blur-[15px] md:p-8" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+          <motion.div role="dialog" aria-modal="true" aria-labelledby="quick-view-title" className="relative h-full w-full max-w-[1090px] overflow-y-auto bg-[#FCF7F4] px-6 pb-10 pt-5 md:h-[min(90vh,760px)] md:px-12 md:pb-12 md:pt-7" initial={reduced ? false : { opacity: 0, scale: 0.992 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.995 }} transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}>
+            <button ref={closeButton} type="button" className="fixed right-4 top-4 z-[110] grid size-11 place-items-center rounded-full border border-flora-line bg-flora-ivory/95 font-sans text-lg shadow-soft backdrop-blur md:absolute md:right-5 md:top-5" onClick={onClose} aria-label="Close room quick view">
               ×
             </button>
-            <div className="order-2 flex flex-col p-7 md:order-1 md:p-12">
-              <BrandMark className="mb-7 self-start" />
-              <p className="eyebrow text-flora-grey">{room.eyebrow}</p>
-              <h2 id="quick-view-title" className="mt-4 font-display text-[clamp(2.7rem,5vw,4.8rem)] leading-[0.88]">{room.name}</h2>
-              <p className="mt-6 text-lg leading-relaxed text-flora-grey">{room.description}</p>
-              <div className="mt-7 grid grid-cols-2 gap-4 border-y border-flora-line py-5">
-                {[room.size, room.occupancy, room.bed, room.view].map((item) => <span key={item} className="eyebrow text-[0.56rem] text-flora-slate">{item}</span>)}
-              </div>
-              <h3 className="mt-7 font-display text-2xl">Features and amenities</h3>
-              <ul className="mt-4 grid gap-2 text-base text-flora-grey">
-                {room.amenities.slice(0, 5).map((amenity) => <li key={amenity} className="flex gap-3"><span className="text-flora-gold">✦</span>{amenity}</li>)}
-              </ul>
-              <Link href={`/rooms/${room.slug}`} className="luxury-button mt-8 self-start border-flora-slate text-flora-slate [--button-fill:var(--flora-slate-blue-deep)]">
-                Full room details
-              </Link>
+            <div className="text-center">
+              <BrandMark className="mx-auto scale-75" />
+              <h2 id="quick-view-title" className="mt-1 font-display text-[clamp(2rem,4vw,3rem)] uppercase leading-none tracking-[0.025em]">{room.name}</h2>
+              <p className="eyebrow mt-3 text-flora-grey">{room.size} · {room.occupancy}</p>
             </div>
-            <div className="order-1 min-h-[48vh] md:order-2 md:min-h-full">
-              <RoomGallery images={room.images} roomName={room.name} fullHeight />
+
+            <div className="mt-7 grid gap-8 md:mt-8 md:grid-cols-[0.92fr_1.08fr] md:items-center md:gap-10">
+              <div className="order-2 md:order-1">
+                <h3 className="font-display text-[clamp(1.8rem,3vw,2.3rem)] uppercase tracking-[0.02em]">Features and amenities</h3>
+                <ul className="mt-6 grid grid-cols-2 gap-x-5 gap-y-4 text-[0.88rem] leading-snug text-flora-grey sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3">
+                  {room.amenities.map((amenity) => <li key={amenity} className="flex gap-2"><span className="mt-1 text-[0.48rem] text-flora-slate">◆</span>{amenity}</li>)}
+                </ul>
+                <div className="mt-7 grid grid-cols-2 gap-3 border-t border-flora-line pt-5">
+                  {[room.bed, room.view].map((item) => <span key={item} className="eyebrow text-[0.5rem] text-flora-slate">{item}</span>)}
+                </div>
+                <Link href={`/rooms/${room.slug}`} className="luxury-button mt-7 border-flora-slate text-flora-slate [--button-fill:var(--flora-slate-blue-deep)]">Full room details</Link>
+              </div>
+              <div className="order-1 md:order-2">
+                <RoomGallery images={room.images} roomName={room.name} />
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -190,11 +182,18 @@ function RoomQuickView({ room, onClose }: { room: Room | null; onClose: () => vo
 
 export function RoomGallery({ images, roomName, fullHeight = false }: { images: string[]; roomName: string; fullHeight?: boolean }) {
   const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [lightbox, setLightbox] = useState(false);
   const lightboxClose = useRef<HTMLButtonElement>(null);
 
   function change(direction: number) {
+    setDirection(direction);
     setIndex((current) => (current + direction + images.length) % images.length);
+  }
+
+  function show(next: number) {
+    setDirection(next >= index ? 1 : -1);
+    setIndex(next);
   }
 
   useEffect(() => {
@@ -216,9 +215,9 @@ export function RoomGallery({ images, roomName, fullHeight = false }: { images: 
 
   const gallery = (
     <div className="relative size-full overflow-hidden bg-flora-navy" role="region" aria-roledescription="carousel" aria-label={`${roomName} gallery`}>
-      <AnimatePresence initial={false} mode="sync">
-        <motion.div key={images[index]} className="absolute inset-0" initial={{ opacity: 0, scale: 1.018 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
-          <Image src={images[index]} alt={`${roomName}, editorial placeholder image ${index + 1}`} fill sizes="(min-width: 768px) 58vw, 100vw" className="object-cover" priority={index === 0} />
+      <AnimatePresence initial={false} custom={direction} mode="sync">
+        <motion.div key={images[index]} custom={direction} className="absolute inset-0" initial={{ x: direction > 0 ? "100%" : "-100%" }} animate={{ x: 0 }} exit={{ x: direction > 0 ? "-100%" : "100%" }} transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}>
+          <Image src={images[index]} alt={`${roomName}, editorial placeholder image ${index + 1}`} fill sizes="(min-width: 768px) 58vw, 100vw" className="object-cover" />
         </motion.div>
       </AnimatePresence>
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-flora-navy/75 to-transparent" />
@@ -228,7 +227,7 @@ export function RoomGallery({ images, roomName, fullHeight = false }: { images: 
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 3H3V7M11 3H15V7M7 15H3V11M11 15H15V11" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg>
       </button>
       <div className="absolute inset-x-0 bottom-5 z-10 flex items-center justify-center gap-2">
-        {images.map((image, dotIndex) => <button key={image} type="button" className={`h-1.5 rounded-full transition-all ${dotIndex === index ? "w-6 bg-flora-cream" : "w-1.5 bg-flora-cream/55"}`} onClick={() => setIndex(dotIndex)} aria-label={`Show image ${dotIndex + 1}`} aria-current={dotIndex === index} />)}
+        {images.map((image, dotIndex) => <button key={image} type="button" className={`h-1.5 rounded-full transition-all ${dotIndex === index ? "w-6 bg-flora-gold" : "w-1.5 bg-flora-cream/70"}`} onClick={() => show(dotIndex)} aria-label={`Show image ${dotIndex + 1}`} aria-current={dotIndex === index} />)}
       </div>
     </div>
   );

@@ -2,19 +2,21 @@
 
 Saved on 15 August 2026 in `C:\Users\bisha\OneDrive\Documents\ChatGPT\Flora`.
 
-## Completed
+## Current state
 
-- Built the multi-page Next.js Flora hotel site: Home, Dining, Spa, four room detail routes, and booking flow.
-- Copied the supplied `C:\Users\bisha\Videos\homeVideo.mp4` to `public\hero.mp4` and connected it to the homepage hero with a poster/reduced-motion fallback.
-- Added scroll-scrubbed word reveals, title entrances, image parallax, blur-to-sharp reveals, botanical textures, room carousels, room quick-view overlay, gallery/lightbox, responsive navigation, guest controls, two-month calendar, example room results, and demo cart state.
-- Added locally stored placeholder photography, photo credits, accessibility labels, keyboard controls, and reduced-motion handling.
-- TypeScript and the optimized production build passed before the final room-overlay layering adjustment.
-- Browser QA completed for desktop hero/rooms/dining/spa/booking and mobile hero/navigation/room overlay. No browser errors remained.
+- The working site includes Home, Dining, Spa, four room detail routes, and the interactive booking prototype.
+- The supplied `C:\Users\bisha\Videos\homeVideo.mp4` is safely copied to `public\hero.mp4` and connected to the homepage hero, with a poster and reduced-motion fallback.
+- The homepage has been rebuilt around the decoded reference recording: compact ivory navigation, pale-blue monogram loader, opening notice, editorial section rhythm, fine script headings, scroll-written paragraphs, blur-to-sharp imagery, domed image masks, blush/ice/sage mood sections, botanical linework, room cards, and the pale room quick-view panel.
+- Dining, Spa, room-detail, booking, form, and footer pages now share the same visual system. The Spa hero specifically uses an arched pale-mineral treatment-room image instead of the earlier tropical placeholder.
+- Room galleries, quick view, lightbox, guest controls, two-month calendar, unavailable/invalid dates, room results, demo cart state, mobile navigation, keyboard controls, and reduced-motion handling are implemented.
+- Placeholder photo licensing and sources are recorded in `PHOTO-CREDITS.md`.
 
-## Last source edits saved, awaiting one final rebuild
+## Verification completed
 
-- Calendar unavailable dates now show a red invalid marker and a validation message when selected.
-- Room quick-view is rendered through a document portal, and its close button is fixed above the overlay on mobile.
+- `pnpm run typecheck` passes.
+- `pnpm run build` passes with all static and dynamic routes generated successfully.
+- Browser QA was completed at 1280 × 720 and 390 × 844 for the homepage hero, navigation, Rooms section, room overlay, Dining, Spa, room detail, booking calendar/results, information form, and footer.
+- The tested browser flows showed no console errors.
 
 ## Resume after a restart
 
@@ -24,18 +26,16 @@ Open PowerShell in this folder and run:
 pnpm install
 pnpm run typecheck
 pnpm run build
-pnpm start --hostname 127.0.0.1 --port 3000
+pnpm dev --hostname 127.0.0.1 --port 3000
 ```
 
 Then open <http://127.0.0.1:3000>.
 
-For faster editing instead of production mode, run `pnpm dev` after `pnpm install`.
+## Before a real launch
 
-## Remaining final check
+- Replace editorial placeholder photography with final property-specific assets.
+- Replace bracketed address, phone, email, privacy, and operating-detail placeholders.
+- Connect real booking inventory, policies, payments, enquiry delivery, and newsletter services.
+- Review the supplied hero video for any reference-property branding embedded directly in the footage; the website cannot remove marks baked into the video itself.
 
-1. Rebuild after the fixed mobile overlay close button.
-2. Verify the mobile quick-view close button is visible and dismisses the overlay.
-3. Verify clicking a future hatched date shows the red marker and validation copy.
-4. Leave the localhost server running and hand off the site.
-
-All source files and the supplied hero video are already on disk. Large generated every-frame video analysis files remain in `video-analysis\every-frame` but are intentionally excluded from Git; the reconstruction specification, keyframes, contact sheets, and sequence sheets are included in the project checkpoint.
+All source files and the supplied hero video are on disk. Large generated every-frame video-analysis files remain in `video-analysis\every-frame` but are intentionally excluded from Git; the reconstruction specification, keyframes, contact sheets, and sequence sheets remain available in `video-analysis`.

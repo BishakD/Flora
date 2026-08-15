@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Montserrat, Parisienne } from "next/font/google";
+import { Cormorant_Garamond, Italianno, Montserrat } from "next/font/google";
 import { Nav } from "@/components/Nav";
 import "./globals.css";
 
@@ -10,7 +10,7 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const parisienne = Parisienne({
+const italianno = Italianno({
   variable: "--font-script",
   subsets: ["latin"],
   weight: "400",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${parisienne.variable} ${montserrat.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${italianno.variable} ${montserrat.variable}`}>
       <body>
         <a className="skip-link" href="#main-content">
           Skip to content
