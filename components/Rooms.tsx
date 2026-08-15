@@ -36,7 +36,7 @@ export function RoomCard({ room, onOpen }: { room: Room; onOpen: (room: Room) =>
   }
 
   return (
-    <article className="group relative min-w-[88%] snap-start overflow-hidden bg-flora-navy transition duration-500 ease-luxury sm:min-w-[70%] md:min-w-[calc((100%_-_2rem)/3)]">
+    <article className="room-card group relative min-w-[88%] snap-start overflow-hidden bg-flora-navy transition duration-500 ease-luxury sm:min-w-[70%] md:min-w-[calc((100%_-_2rem)/3)]">
       <div className="relative aspect-[0.775] overflow-hidden">
         <AnimatePresence initial={false} mode="sync">
           <motion.div
@@ -50,11 +50,11 @@ export function RoomCard({ room, onOpen }: { room: Room; onOpen: (room: Room) =>
             <Image src={room.images[imageIndex]} alt={`${room.name}, editorial placeholder view ${imageIndex + 1}`} fill sizes="(min-width: 768px) 34vw, 88vw" className="object-cover transition-transform duration-[900ms] ease-luxury group-hover:scale-[1.03]" />
           </motion.div>
         </AnimatePresence>
-        <div className="absolute inset-0 bg-flora-espresso/0 transition-colors duration-[380ms] group-hover:bg-flora-espresso/52 group-focus-within:bg-flora-espresso/52" />
-        <p className="absolute inset-x-7 top-1/2 z-10 -translate-y-[38%] text-center text-[1.03rem] leading-[1.65] text-flora-cream opacity-0 transition duration-[380ms] ease-luxury group-hover:-translate-y-1/2 group-hover:opacity-100 group-focus-within:-translate-y-1/2 group-focus-within:opacity-100">{room.summary}</p>
-        <button type="button" className="room-title-pill absolute bottom-6 left-1/2 z-20 min-w-[150px] -translate-x-1/2 bg-flora-ivory px-5 py-2.5 text-center font-sans text-[0.55rem] uppercase tracking-[0.13em] text-flora-charcoal shadow-soft" onClick={() => onOpen(room)} aria-label={`Quick view ${room.name}`}>{room.name}</button>
+        <div className="room-card-overlay absolute inset-0 z-10 transition-colors duration-[380ms]" />
+        <p className="absolute inset-x-7 top-1/2 z-20 -translate-y-[38%] text-center text-[1.03rem] leading-[1.65] text-flora-cream opacity-0 drop-shadow-[0_2px_12px_rgba(20,15,12,.72)] transition duration-[380ms] ease-luxury group-hover:-translate-y-1/2 group-hover:opacity-100 group-focus-within:-translate-y-1/2 group-focus-within:opacity-100">{room.summary}</p>
+        <button type="button" className="room-title-pill absolute bottom-6 left-1/2 z-30 min-w-[150px] -translate-x-1/2 bg-flora-ivory px-5 py-2.5 text-center font-sans text-[0.55rem] uppercase tracking-[0.13em] text-flora-charcoal shadow-soft" onClick={() => onOpen(room)} aria-label={`Quick view ${room.name}`}>{room.name}</button>
 
-        <div className="absolute left-2 right-2 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between text-flora-cream opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="pointer-events-none absolute left-2 right-2 top-1/2 z-30 flex -translate-y-1/2 items-center justify-between text-flora-cream opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
           <button type="button" className="grid size-11 place-items-center drop-shadow-[0_2px_8px_rgba(27,42,63,.5)]" onClick={() => changeImage(-1)} aria-label={`Previous ${room.name} image`}>
             <ArrowIcon direction="left" />
           </button>
@@ -63,7 +63,7 @@ export function RoomCard({ room, onOpen }: { room: Room; onOpen: (room: Room) =>
           </button>
         </div>
 
-        <div className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 gap-1.5" aria-label={`Image ${imageIndex + 1} of 3`}>
+        <div className="absolute left-1/2 top-4 z-30 flex -translate-x-1/2 gap-1.5" aria-label={`Image ${imageIndex + 1} of 3`}>
           {room.images.slice(0, 3).map((image, dotIndex) => (
             <button key={image} type="button" className={`h-1.5 rounded-full transition-all ${dotIndex === imageIndex ? "w-5 bg-flora-cream" : "w-1.5 bg-flora-cream/50"}`} onClick={() => setImageIndex(dotIndex)} aria-label={`Show image ${dotIndex + 1}`} />
           ))}

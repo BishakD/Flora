@@ -220,6 +220,15 @@ a {
   clip-path: polygon(8px 0, calc(100% - 8px) 0, calc(100% - 8px) 5px, 100% 9px, 100% calc(100% - 9px), calc(100% - 8px) calc(100% - 5px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 5px), 0 calc(100% - 9px), 0 9px, 8px 5px);
 }
 
+.room-card-overlay {
+  background: rgba(43, 32, 22, 0);
+}
+
+.room-card:hover .room-card-overlay,
+.room-card:focus-within .room-card-overlay {
+  background: rgba(30, 23, 17, 0.64);
+}
+
 .ornamental-panel {
   clip-path: polygon(22px 0, calc(100% - 22px) 0, calc(100% - 22px) 10px, calc(100% - 10px) 22px, 100% 22px, 100% calc(100% - 22px), calc(100% - 10px) calc(100% - 22px), calc(100% - 22px) calc(100% - 10px), calc(100% - 22px) 100%, 22px 100%, 22px calc(100% - 10px), 10px calc(100% - 22px), 0 calc(100% - 22px), 0 22px, 10px 22px, 22px 10px);
 }
@@ -379,6 +388,15 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .loader-cloud {
+    display: none;
+  }
+
+  [data-reveal-section] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   html {
     scroll-behavior: auto;
   }

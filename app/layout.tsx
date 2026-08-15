@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Italianno, Montserrat } from "next/font/google";
+import { InertialScroll } from "@/components/InertialScroll";
 import { Nav } from "@/components/Nav";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${cormorant.variable} ${italianno.variable} ${montserrat.variable}`}>
       <body suppressHydrationWarning>
+        <InertialScroll />
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>

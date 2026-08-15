@@ -26,11 +26,14 @@ function BrandIntro({ onComplete }: { onComplete: () => void }) {
 type HeroProps = { poster: string; videoSrc?: string };
 
 export function Hero({ poster, videoSrc }: HeroProps) {
-  const reduced = useReducedMotion();
-  const [intro, setIntro] = useState(!reduced);
+  const reducedPreference = useReducedMotion();
+  const [hydrated, setHydrated] = useState(false);
+  const reduced = hydrated && Boolean(reducedPreference);
+  const [intro, setIntro] = useState(true);
   const [videoFailed, setVideoFailed] = useState(false);
   const finishIntro = useCallback(() => setIntro(false), []);
 
+  useEffect(() => setHydrated(true), []);
   useEffect(() => { if (reduced) setIntro(false); }, [reduced]);
   useEffect(() => {
     if (!intro) return;

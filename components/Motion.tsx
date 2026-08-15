@@ -132,13 +132,12 @@ export function SectionTitleScript({ children, className = "", as = "h2" }: Sect
 }
 
 export function RevealSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const reduced = useReducedMotion();
-
   return (
     <motion.div
+      data-reveal-section
       className={className}
-      initial={reduced ? false : { opacity: 0, y: 30 }}
-      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18 }}
       transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
     >
@@ -170,31 +169,35 @@ export function ParallaxImage({
 
   useEffect(() => {
     if (!wrap.current || !image.current || reduced) return;
-    let cleanup = () => undefined;
+    gsap.registerPlugin(ScrollTrigger);
 
-    void (async () => {
-      const { gsap } = await import("gsap");
-      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
-      gsap.registerPlugin(ScrollTrigger);
-      if (!wrap.current || !image.current) return;
+    const parallax = gsap.fromTo(
+      image.current,
+      { yPercent: -6, scale: 1.02 },
+      {
+        yPercent: 6,
+        scale: 1.045,
+        ease: "none",
+        scrollTrigger: { trigger: wrap.current, start: "top bottom", end: "bottom top", scrub: 0.6 },
+      },
+    );
+    const reveal = gsap.fromTo(
+      image.current,
+      { filter: "blur(14px)", opacity: 0.72 },
+      {
+        filter: "blur(0px)",
+        opacity: 1,
+        ease: "none",
+        scrollTrigger: { trigger: wrap.current, start: "top 96%", end: "top 56%", scrub: 0.35, invalidateOnRefresh: true },
+      },
+    );
 
-      const parallax = gsap.fromTo(
-        image.current,
-        { yPercent: -6, scale: 1.02 },
-        {
-          yPercent: 6,
-          scale: 1.045,
-          ease: "none",
-          scrollTrigger: { trigger: wrap.current, start: "top bottom", end: "bottom top", scrub: 0.6 },
-        },
-      );
-      cleanup = () => {
-        parallax.scrollTrigger?.kill();
-        parallax.kill();
-      };
-    });
-
-    return () => cleanup();
+    return () => {
+      parallax.scrollTrigger?.kill();
+      parallax.kill();
+      reveal.scrollTrigger?.kill();
+      reveal.kill();
+    };
   }, [reduced]);
 
   return (
@@ -220,35 +223,27 @@ export function BlurRevealImage({
 
   useEffect(() => {
     if (!wrap.current || !image.current || reduced) return;
-    let cleanup = () => undefined;
+    gsap.registerPlugin(ScrollTrigger);
 
-    void (async () => {
-      const { gsap } = await import("gsap");
-      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
-      gsap.registerPlugin(ScrollTrigger);
-      if (!wrap.current || !image.current) return;
-
-      gsap.set(image.current, { filter: "blur(14px)", opacity: 0.72, scale: 1.055 });
-      const reveal = gsap.to(image.current, {
-        filter: "blur(0px)",
-        opacity: 1,
-        scale: 1,
-        ease: "none",
-        scrollTrigger: {
-          trigger: wrap.current,
-          start: "top 92%",
-          end: "top 48%",
-          scrub: 0.5,
-          invalidateOnRefresh: true,
-        },
-      });
-      cleanup = () => {
-        reveal.scrollTrigger?.kill();
-        reveal.kill();
-      };
+    gsap.set(image.current, { filter: "blur(16px)", opacity: 0.66, scale: 1.045 });
+    const reveal = gsap.to(image.current, {
+      filter: "blur(0px)",
+      opacity: 1,
+      scale: 1,
+      ease: "none",
+      scrollTrigger: {
+        trigger: wrap.current,
+        start: "top 96%",
+        end: "top 56%",
+        scrub: 0.35,
+        invalidateOnRefresh: true,
+      },
     });
 
-    return () => cleanup();
+    return () => {
+      reveal.scrollTrigger?.kill();
+      reveal.kill();
+    };
   }, [reduced]);
 
   return (
