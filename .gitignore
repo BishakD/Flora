@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+dist
+.DS_Store
+*.log
+.env*
+!.env.example
+.playwright-cli/
+.video-analysis-tools/
+output/
+video-analysis/every-frame/
+tsconfig.tsbuildinfo
