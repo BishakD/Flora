@@ -46,7 +46,7 @@ export function Nav() {
           {leftLinks.map(([label, href]) => <Link key={label} href={href} className="nav-link whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] text-flora-charcoal">{label}</Link>)}
         </div>
 
-        <Link href="/" className="col-start-1 flex flex-col items-start justify-center leading-none lg:col-start-2 lg:items-center" aria-label="Flora home">
+        <Link href="/" className="col-start-2 flex flex-col items-center justify-center leading-none" aria-label="Flora home">
           <span className="font-display text-[1.25rem] tracking-[0.08em] text-flora-blue lg:text-[1.32rem]">FLORA</span>
           <span className="mt-0.5 hidden font-sans text-[0.34rem] uppercase tracking-[0.32em] text-flora-grey lg:block">Firenze</span>
         </Link>
@@ -54,7 +54,7 @@ export function Nav() {
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-[clamp(.8rem,1.7vw,1.75rem)]">
           <Link href="/#contact" className="nav-link hidden whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] lg:block">Contacts</Link>
           <Link href="/booking" className="notched-button hidden min-w-[132px] bg-flora-blue px-6 py-3 text-center font-sans text-[0.58rem] uppercase tracking-[0.14em] text-flora-ivory shadow-[0_4px_10px_rgba(43,32,22,.15)] lg:block">Book now</Link>
-          <Link href="/booking" className="rounded-full bg-flora-blue px-4 py-2 font-sans text-[0.55rem] uppercase tracking-[0.13em] text-flora-ivory lg:hidden">Book</Link>
+          <Link href="/booking" className="notched-button min-w-[68px] bg-flora-blue px-3 py-2.5 text-center font-sans text-[0.55rem] uppercase tracking-[0.13em] text-flora-ivory shadow-[0_4px_10px_rgba(43,32,22,.15)] lg:hidden">Book</Link>
           <button type="button" className="flex size-10 items-center justify-center rounded-full border border-flora-line text-flora-charcoal lg:hidden" aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? "Close navigation" : "Open navigation"} onClick={() => setOpen((value) => !value)}>
             <span className="relative block h-4 w-5" aria-hidden="true">
               <span className={`absolute left-0 top-1 h-px w-5 bg-current transition-transform ${open ? "translate-y-[3px] rotate-45" : ""}`} />

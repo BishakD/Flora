@@ -16,6 +16,18 @@ function ArrowIcon({ direction = "right" }: { direction?: "left" | "right" }) {
   );
 }
 
+function FullscreenIcon({ expanded = false }: { expanded?: boolean }) {
+  return expanded ? (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M3 7H7V3M15 7H11V3M3 11H7V15M15 11H11V15" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ) : (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M7 3H3V7M11 3H15V7M7 15H3V11M11 15H15V11" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function RoomCard({ room, onOpen }: { room: Room; onOpen: (room: Room) => void }) {
   const [imageIndex, setImageIndex] = useState(0);
 
@@ -115,6 +127,7 @@ function RoomQuickView({ room, onClose }: { room: Room | null; onClose: () => vo
     document.body.style.overflow = "hidden";
     closeButton.current?.focus();
     const onKey = (event: KeyboardEvent) => {
+      if (document.querySelector("[data-room-lightbox]")) return;
       if (event.key === "Escape") onClose();
       if (event.key === "Tab") {
         const modal = closeButton.current?.closest("[role=dialog]");
@@ -182,7 +195,8 @@ export function RoomGallery({ images, roomName, fullHeight = false }: { images: 
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [lightbox, setLightbox] = useState(false);
-  const lightboxClose = useRef<HTMLButtonElement>(null);
+  const expandButton = useRef<HTMLButtonElement>(null);
+  const collapseButton = useRef<HTMLButtonElement>(null);
 
   function change(direction: number) {
     setDirection(direction);
@@ -198,20 +212,35 @@ export function RoomGallery({ images, roomName, fullHeight = false }: { images: 
     if (!lightbox) return;
     const original = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    lightboxClose.current?.focus();
+    collapseButton.current?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setLightbox(false);
       if (event.key === "ArrowLeft") change(-1);
       if (event.key === "ArrowRight") change(1);
+      if (event.key === "Tab") {
+        const dialog = collapseButton.current?.closest("[role=dialog]");
+        const focusable = dialog?.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!focusable?.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = original;
       window.removeEventListener("keydown", onKey);
+      expandButton.current?.focus();
     };
   }, [lightbox]);
 
-  const gallery = (
+  const renderGallery = (expanded = false) => (
     <div className="relative size-full overflow-hidden bg-flora-navy" role="region" aria-roledescription="carousel" aria-label={`${roomName} gallery`}>
       <AnimatePresence initial={false} custom={direction} mode="sync">
         <motion.div key={images[index]} custom={direction} className="absolute inset-0" initial={{ x: direction > 0 ? "100%" : "-100%" }} animate={{ x: 0 }} exit={{ x: direction > 0 ? "-100%" : "100%" }} transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}>
@@ -221,8 +250,8 @@ export function RoomGallery({ images, roomName, fullHeight = false }: { images: 
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-flora-navy/75 to-transparent" />
       <button type="button" className="absolute left-5 top-1/2 z-10 grid size-11 -translate-y-1/2 place-items-center rounded-full border border-flora-cream/55 bg-flora-navy/15 text-flora-cream backdrop-blur-sm" onClick={() => change(-1)} aria-label="Previous gallery image"><ArrowIcon direction="left" /></button>
       <button type="button" className="absolute right-5 top-1/2 z-10 grid size-11 -translate-y-1/2 place-items-center rounded-full border border-flora-cream/55 bg-flora-navy/15 text-flora-cream backdrop-blur-sm" onClick={() => change(1)} aria-label="Next gallery image"><ArrowIcon /></button>
-      <button type="button" className="absolute right-5 top-5 z-10 grid size-11 place-items-center rounded-full border border-flora-cream/55 bg-flora-navy/20 text-flora-cream backdrop-blur-sm" onClick={() => setLightbox(true)} aria-label="Expand gallery image">
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 3H3V7M11 3H15V7M7 15H3V11M11 15H15V11" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg>
+      <button ref={expanded ? collapseButton : expandButton} type="button" className="absolute right-3 top-3 z-20 grid size-10 place-items-center rounded-full border border-flora-cream/55 bg-flora-navy/25 text-flora-cream backdrop-blur-sm transition-colors hover:bg-flora-cream hover:text-flora-navy focus-visible:bg-flora-cream focus-visible:text-flora-navy sm:right-5 sm:top-5 sm:size-11" onClick={() => setLightbox(!expanded)} aria-label={expanded ? "Exit expanded gallery" : "Expand gallery image"} aria-pressed={expanded}>
+        <FullscreenIcon expanded={expanded} />
       </button>
       <div className="absolute inset-x-0 bottom-5 z-10 flex items-center justify-center gap-2">
         {images.map((image, dotIndex) => <button key={image} type="button" className={`h-1.5 rounded-full transition-all ${dotIndex === index ? "w-6 bg-flora-gold" : "w-1.5 bg-flora-cream/70"}`} onClick={() => show(dotIndex)} aria-label={`Show image ${dotIndex + 1}`} aria-current={dotIndex === index} />)}
@@ -232,12 +261,11 @@ export function RoomGallery({ images, roomName, fullHeight = false }: { images: 
 
   return (
     <>
-      <div className={fullHeight ? "h-full min-h-[48vh]" : "aspect-[4/3] w-full md:aspect-[1.15]"}>{gallery}</div>
+      <div className={fullHeight ? "h-full min-h-[48vh]" : "aspect-[4/3] w-full md:aspect-[1.15]"}>{renderGallery()}</div>
       <AnimatePresence>
         {lightbox ? (
-          <motion.div className="fixed inset-0 z-[130] grid place-items-center bg-flora-espresso/95 p-4 md:p-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={`${roomName} expanded gallery`}>
-            <div className="relative h-[min(84vh,900px)] w-full max-w-[1500px]">{gallery}</div>
-            <button ref={lightboxClose} type="button" className="absolute right-5 top-5 z-20 grid size-12 place-items-center rounded-full border border-flora-cream/50 text-xl text-flora-cream" onClick={() => setLightbox(false)} aria-label="Close expanded gallery">×</button>
+          <motion.div data-room-lightbox className="fixed inset-0 z-[130] grid place-items-center bg-flora-espresso/95 p-4 md:p-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={`${roomName} expanded gallery`}>
+            <div className="relative h-[min(84vh,900px)] w-full max-w-[1500px]">{renderGallery(true)}</div>
           </motion.div>
         ) : null}
       </AnimatePresence>
