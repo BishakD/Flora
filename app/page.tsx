@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { InfoRequestForm } from "@/components/Forms";
@@ -76,13 +77,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="relative min-h-[74svh] overflow-hidden bg-flora-navy" aria-label="Florence rooftop at dusk">
-        <ParallaxImage src="/images/duomo-sunset.jpg" alt="Florence Cathedral above the city at dusk, rooftop dining placeholder" className="!absolute inset-0" imageClassName="object-[58%_center]" />
-        <div className="absolute inset-0 bg-flora-navy/12" />
-      </section>
+      <div className="relative bg-flora-navy">
+        <section className="sticky top-[var(--nav-height)] h-[74svh] overflow-hidden bg-flora-navy" aria-label="Florence rooftop at dusk">
+          <div className="relative size-full">
+            <Image src="/images/duomo-sunset.jpg" alt="Florence Cathedral above the city at dusk, rooftop dining placeholder" fill sizes="100vw" className="object-cover object-[58%_center]" />
+            <div className="absolute inset-0 bg-flora-navy/12" />
+          </div>
+        </section>
 
-      <section id="dining" className="botanical florence-art textured bg-flora-ice py-28 md:py-44">
-        <div className="container-shell">
+        <section id="dining" className="botanical florence-art textured relative z-10 bg-flora-ice py-28 md:py-44">
+          <div className="container-shell">
           <SectionTitleScript className="script-no-swash mx-auto max-w-max text-center text-[clamp(5rem,10vw,8.5rem)]">Dining</SectionTitleScript>
           <div className="mt-12 grid items-center gap-12 md:mt-16 md:grid-cols-[0.92fr_1.08fr] md:gap-16">
             <BlurRevealImage src="/images/dining-02.jpg" alt="A blue-toned restaurant salon, placeholder for Flora dining" className="arch-frame mx-auto aspect-[0.76] w-[min(100%,390px)]" />
@@ -124,8 +128,9 @@ export default function HomePage() {
               </ScrollRevealText>
             </div>
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
 
       <section className="bg-flora-sage px-4 pt-4 md:px-8 md:pt-8" aria-label="Flora spa treatment room">
         <BlurRevealImage src="/images/spa-05.jpg" alt="Botanical oils and candlelight prepared for a Flora wellness ritual" className="mx-auto aspect-[2.08] max-w-[1400px]" imageClassName="object-[center_58%]" />
