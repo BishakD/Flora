@@ -20,7 +20,7 @@ export function Footer() {
             <form className="max-w-2xl" onSubmit={(event) => { event.preventDefault(); setStatus("Newsletter demo only — no subscription was created."); }}>
               <label htmlFor="newsletter" className="font-display text-[clamp(2rem,4vw,3.5rem)] uppercase leading-none tracking-[0.03em]">Subscribe to our newsletter</label>
               <div className="mt-7 flex border-b border-flora-cream/65">
-                <input id="newsletter" required type="email" className="min-h-12 flex-1 bg-transparent py-2 outline-none placeholder:text-flora-cream/62" placeholder="Your email" />
+                <input id="newsletter" suppressHydrationWarning required type="email" className="min-h-12 flex-1 bg-transparent py-2 outline-none placeholder:text-flora-cream/62" placeholder="Your email" />
                 <button type="submit" className="eyebrow px-4">Subscribe <span aria-hidden="true">→</span></button>
               </div>
               <label className="mt-5 flex max-w-xl items-start gap-3 font-sans text-[0.55rem] leading-relaxed tracking-[0.07em] text-flora-cream/80"><input required type="checkbox" className="mt-1 accent-flora-navy" />I agree to receive editorial news once the final privacy policy and mailing provider are connected.</label>

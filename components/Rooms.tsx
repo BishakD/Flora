@@ -78,15 +78,13 @@ export function RoomShowcase({ rooms }: { rooms: Room[] }) {
       <div className="relative">
         <div ref={track} className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
           {rooms.map((room) => (
-            <div key={room.slug} className="contents snap-start">
-              <RoomCard room={room} onOpen={setQuickView} />
-            </div>
+            <RoomCard key={room.slug} room={room} onOpen={setQuickView} />
           ))}
         </div>
         <div className="mt-8 flex flex-col items-center justify-between gap-5 md:flex-row">
           <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
             {rooms.map((room, index) => (
-              <button key={room.slug} type="button" className={`shrink-0 rounded-full border px-4 py-2 font-sans text-[0.58rem] uppercase tracking-[0.12em] transition-colors ${current === index ? "border-flora-slate bg-flora-slate text-flora-ivory" : "border-flora-slate/45 text-flora-slate hover:bg-flora-slate hover:text-flora-ivory"}`} onClick={() => goTo(index)}>
+              <button key={room.slug} type="button" aria-pressed={current === index} className={`shrink-0 rounded-full border px-4 py-2 font-sans text-[0.58rem] uppercase tracking-[0.12em] transition-colors ${current === index ? "border-flora-slate bg-flora-slate text-flora-ivory" : "border-flora-slate/45 text-flora-slate hover:bg-flora-slate hover:text-flora-ivory"}`} onClick={() => goTo(index)}>
                 {room.name}
               </button>
             ))}

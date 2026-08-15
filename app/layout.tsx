@@ -41,8 +41,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${italianno.variable} ${montserrat.variable}`}>
-      <body>
+    <html lang="en" data-scroll-behavior="smooth" className={`${cormorant.variable} ${italianno.variable} ${montserrat.variable}`}>
+      <body suppressHydrationWarning>
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>

@@ -41,7 +41,7 @@ export function Nav() {
 
   return (
     <header className={`fixed inset-x-0 top-0 z-[70] h-[var(--nav-height)] border-b bg-flora-cream transition-shadow duration-300 ${scrolled || open ? "border-flora-line/70 shadow-[0_8px_24px_rgba(43,32,22,.055)]" : "border-flora-line/45"}`}>
-      <nav aria-label="Primary navigation" className="mx-auto grid h-full w-[calc(100%_-_32px)] max-w-[1480px] grid-cols-[1fr_auto_1fr] items-center gap-6">
+      <nav aria-label="Primary navigation" className="mx-auto grid h-full w-[calc(100%_-_24px)] max-w-[1540px] grid-cols-[1fr_auto_1fr] items-center gap-6">
         <div className="hidden items-center gap-[clamp(1.15rem,2.25vw,2.7rem)] lg:flex">
           {leftLinks.map(([label, href]) => <Link key={label} href={href} className="nav-link whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] text-flora-charcoal">{label}</Link>)}
         </div>

@@ -65,7 +65,7 @@ export function Hero({ poster, videoSrc }: HeroProps) {
           {useVideo ? <video className="size-full object-cover" src={videoSrc} poster={poster} autoPlay muted loop playsInline preload="metadata" onError={() => setVideoFailed(true)} aria-label="Flora palazzo film" /> : <Image src={poster} alt="Florence illuminated at blue hour, an editorial placeholder for Flora's future hero film" fill preload sizes="100vw" className="object-cover" />}
         </motion.div>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(27,42,63,.04),rgba(27,42,63,.08)_58%,rgba(27,42,63,.52))]" />
-        <motion.div className="absolute inset-x-0 bottom-[11.25rem] z-10 flex flex-col items-center text-center text-flora-cream" initial={reduced ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: delay + 0.55, ease: [0.22, 1, 0.36, 1] }}>
+        <motion.div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center text-flora-cream" initial={reduced ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: delay + 0.55, ease: [0.22, 1, 0.36, 1] }}>
           <span className="font-display text-[clamp(2.6rem,5.5vw,4.8rem)] tracking-[0.06em] drop-shadow-[0_3px_18px_rgba(27,42,63,.3)]">FLORA</span>
           <span className="mt-2 font-sans text-[0.52rem] uppercase tracking-[0.3em] text-flora-cream/85">A boutique palazzo · Firenze</span>
         </motion.div>
