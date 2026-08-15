@@ -18,7 +18,7 @@ const rituals = [
 export default function SpaPage() {
   return (
     <main id="main-content" className="mt-[var(--nav-height)]">
-      <section className="botanical textured bg-flora-sage text-flora-charcoal">
+      <section className="botanical florence-art textured bg-flora-sage text-flora-charcoal">
         <div className="container-shell grid min-h-[82svh] items-center gap-12 py-20 md:grid-cols-[1.02fr_0.98fr] md:py-24 lg:gap-20">
           <div className="max-w-3xl">
             <p className="eyebrow text-flora-slate">Below the palazzo</p>
@@ -29,7 +29,7 @@ export default function SpaPage() {
         </div>
       </section>
 
-      <section className="botanical textured section-pad bg-flora-cream">
+      <section className="botanical florence-art textured section-pad bg-flora-cream">
         <div className="container-shell grid items-center gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
           <div>
             <p className="eyebrow text-flora-slate">Wellness rituals</p>
@@ -61,7 +61,7 @@ export default function SpaPage() {
         </div>
       </section>
 
-      <section className="botanical section-pad bg-flora-blush">
+      <section className="botanical botanical-emphasis section-pad bg-flora-blush">
         <div className="container-shell">
           <div className="mx-auto max-w-3xl text-center">
             <SectionTitleScript className="text-[clamp(4.5rem,9vw,8rem)] text-flora-terracotta">Rituals</SectionTitleScript>

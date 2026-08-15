@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect, useRef } from "react";
 
 type ScrollRevealTextProps = {
@@ -98,36 +100,30 @@ export function SectionTitleScript({ children, className = "", as = "h2" }: Sect
 
   useEffect(() => {
     if (!ink.current || reduced) return;
-    let cleanup = () => undefined;
-    void (async () => {
-      const { gsap } = await import("gsap");
-      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
-      gsap.registerPlugin(ScrollTrigger);
-      if (!ink.current) return;
-      gsap.set(ink.current, { clipPath: "inset(0 100% 0 0)" });
-      const tween = gsap.to(ink.current, {
-        clipPath: "inset(0 0% 0 0)",
-        ease: "none",
-        scrollTrigger: {
-          trigger: ink.current,
-          start: "top 86%",
-          end: "bottom 48%",
-          scrub: 0.38,
-          invalidateOnRefresh: true,
-        },
-      });
-      cleanup = () => { tween.scrollTrigger?.kill(); tween.kill(); };
+    gsap.registerPlugin(ScrollTrigger);
+    const title = ink.current;
+    gsap.set(title, { clipPath: "inset(0 100% 0 0)" });
+    const tween = gsap.to(title, {
+      clipPath: "inset(0 0% 0 0)",
+      ease: "none",
+      scrollTrigger: {
+        trigger: title,
+        start: "top bottom",
+        end: "center center",
+        scrub: true,
+        invalidateOnRefresh: true,
+      },
     });
-    return () => cleanup();
+
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
   }, [children, reduced]);
 
   return (
     <Tag
       className={`script-title relative ${className}`}
-      initial={reduced ? false : { opacity: 0, y: 12 }}
-      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: false, amount: 0.32 }}
-      transition={{ duration: 0.46, ease: [0.22, 1, 0.36, 1] }}
     >
       <span className="script-swash" aria-hidden="true" />
       <span ref={ink} className="relative z-[1] block will-change-[clip-path]">{children}</span>

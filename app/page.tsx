@@ -11,7 +11,7 @@ export default function HomePage() {
     <main id="main-content">
       <Hero poster="/images/hero-palazzo.jpg" videoSrc="/hero.mp4" />
 
-      <section id="palace" className="botanical bg-flora-cream pb-28 pt-48 md:pb-44 md:pt-56">
+      <section id="palace" className="botanical florence-art bg-flora-cream pb-28 pt-48 md:pb-44 md:pt-56">
         <div className="container-shell">
           <RevealSection>
             <p className="mx-auto max-w-[820px] text-center font-display text-[clamp(1.8rem,3.7vw,3.35rem)] uppercase leading-[1.13] tracking-[0.012em]">
@@ -50,7 +50,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="rooms" className="botanical textured bg-flora-blush py-28 md:py-44">
+      <section id="rooms" className="botanical botanical-emphasis textured bg-flora-blush py-28 md:py-44">
         <div className="container-shell">
           <SectionTitleScript className="mx-auto max-w-max text-center text-[clamp(4.4rem,9vw,8rem)]">Rooms and Suites</SectionTitleScript>
 
@@ -81,7 +81,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-flora-navy/12" />
       </section>
 
-      <section id="dining" className="botanical textured bg-flora-ice py-28 md:py-44">
+      <section id="dining" className="botanical florence-art textured bg-flora-ice py-28 md:py-44">
         <div className="container-shell">
           <SectionTitleScript className="script-no-swash mx-auto max-w-max text-center text-[clamp(5rem,10vw,8.5rem)]">Dining</SectionTitleScript>
           <div className="mt-12 grid items-center gap-12 md:mt-16 md:grid-cols-[0.92fr_1.08fr] md:gap-16">
@@ -131,7 +131,7 @@ export default function HomePage() {
         <BlurRevealImage src="/images/spa-05.jpg" alt="Botanical oils and candlelight prepared for a Flora wellness ritual" className="mx-auto aspect-[2.08] max-w-[1400px]" imageClassName="object-[center_58%]" />
       </section>
 
-      <section id="spa" className="botanical textured bg-flora-sage py-28 md:py-44">
+      <section id="spa" className="botanical florence-art textured bg-flora-sage py-28 md:py-44">
         <div className="container-shell">
           <SectionTitleScript className="script-no-swash mx-auto max-w-max text-center text-[clamp(4.8rem,10vw,8.2rem)]">The Spa</SectionTitleScript>
           <div className="mt-14 grid items-center gap-12 md:grid-cols-[0.9fr_1.1fr] md:gap-16">
@@ -147,7 +147,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="botanical bg-flora-cream py-28 md:py-44">
+      <section className="botanical florence-art bg-flora-cream py-28 md:py-44">
         <div className="container-shell">
           <SectionTitleScript className="script-no-swash mx-auto max-w-max text-center text-[clamp(3.9rem,8vw,7rem)]">Experiential Hotel</SectionTitleScript>
           <ParallaxImage src="/images/ponte-vecchio.jpg" alt="The Arno and Ponte Vecchio at golden hour" className="mt-10 aspect-[1.55] md:mt-14" />
@@ -170,7 +170,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="botanical bg-flora-cream px-4 py-28 md:py-40"><InfoRequestForm /></section>
+      <section className="botanical botanical-emphasis bg-flora-cream px-4 py-28 md:py-40"><InfoRequestForm /></section>
       <Footer />
     </main>
   );

@@ -41,7 +41,7 @@ export function Nav() {
 
   return (
     <header className={`fixed inset-x-0 top-0 z-[70] h-[var(--nav-height)] border-b bg-flora-cream transition-shadow duration-300 ${scrolled || open ? "border-flora-line/70 shadow-[0_8px_24px_rgba(43,32,22,.055)]" : "border-flora-line/45"}`}>
-      <nav aria-label="Primary navigation" className="mx-auto grid h-full w-[min(100%-32px,1216px)] grid-cols-[1fr_auto_1fr] items-center gap-6">
+      <nav aria-label="Primary navigation" className="mx-auto grid h-full w-[calc(100%_-_32px)] max-w-[1480px] grid-cols-[1fr_auto_1fr] items-center gap-6">
         <div className="hidden items-center gap-[clamp(1.15rem,2.25vw,2.7rem)] lg:flex">
           {leftLinks.map(([label, href]) => <Link key={label} href={href} className="nav-link whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] text-flora-charcoal">{label}</Link>)}
         </div>
@@ -53,8 +53,7 @@ export function Nav() {
 
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-[clamp(.8rem,1.7vw,1.75rem)]">
           <Link href="/#contact" className="nav-link hidden whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] lg:block">Contacts</Link>
-          <button type="button" className="hidden whitespace-nowrap font-sans text-[0.55rem] uppercase tracking-[0.13em] text-flora-grey lg:block" aria-label="Language selector, English selected">ITA <span aria-hidden="true">/</span> <span className="border-b border-flora-charcoal pb-1 text-flora-charcoal">ENG</span></button>
-          <Link href="/booking" className="notched-button hidden min-w-[132px] bg-flora-blue px-6 py-3 text-center font-sans text-[0.58rem] uppercase tracking-[0.14em] text-flora-ivory lg:block">Book now</Link>
+          <Link href="/booking" className="notched-button hidden min-w-[132px] bg-flora-blue px-6 py-3 text-center font-sans text-[0.58rem] uppercase tracking-[0.14em] text-flora-ivory shadow-[0_4px_10px_rgba(43,32,22,.15)] lg:block">Book now</Link>
           <Link href="/booking" className="rounded-full bg-flora-blue px-4 py-2 font-sans text-[0.55rem] uppercase tracking-[0.13em] text-flora-ivory lg:hidden">Book</Link>
           <button type="button" className="flex size-10 items-center justify-center rounded-full border border-flora-line text-flora-charcoal lg:hidden" aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? "Close navigation" : "Open navigation"} onClick={() => setOpen((value) => !value)}>
             <span className="relative block h-4 w-5" aria-hidden="true">

@@ -23,7 +23,7 @@ export default function DiningPage() {
         </div>
       </section>
 
-      <section className="botanical section-pad bg-flora-cream">
+      <section className="botanical florence-art section-pad bg-flora-cream">
         <div className="container-shell grid items-center gap-12 lg:grid-cols-[0.82fr_1.18fr] lg:gap-24">
           <div>
             <p className="eyebrow text-flora-terracotta">A dreamer’s experience</p>
