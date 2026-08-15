@@ -2,27 +2,26 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { BookingBar } from "@/components/BookingBar";
 import { Footer } from "@/components/Footer";
 import { RevealSection, ScrollRevealText } from "@/components/Motion";
 import { AmenityList, RateCard, RoomGallery } from "@/components/Rooms";
-import { rooms } from "@/data/hotel";
+import { getRoomBySlug, getRooms } from "@/lib/rooms";
 
-export function generateStaticParams() {
-  return rooms.map((room) => ({ slug: room.slug }));
-}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const room = rooms.find((item) => item.slug === slug);
+  const room = await getRoomBySlug(slug);
   return room
-    ? { title: room.name, description: `${room.summary} Explore the illustrative room detail and rate presentation for Flora Florence.` }
+    ? { title: room.name, description: `${room.summary} Explore room details and available rates at Flora Florence.` }
     : { title: "Room not found" };
 }
 
 export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
+  await connection();
   const { slug } = await params;
-  const room = rooms.find((item) => item.slug === slug);
+  const [room, rooms] = await Promise.all([getRoomBySlug(slug), getRooms()]);
   if (!room) notFound();
 
   return (
@@ -85,12 +84,12 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
       <section className="botanical textured section-pad bg-flora-blush" aria-labelledby="rates-title">
         <div className="container-shell">
           <RevealSection className="max-w-3xl">
-            <p className="eyebrow text-flora-terracotta">Illustrative booking presentation</p>
+            <p className="eyebrow text-flora-terracotta">Your stay, your rhythm</p>
             <h2 id="rates-title" className="display-title mt-4 text-[clamp(3.2rem,6vw,6rem)]">Choose the rhythm of your stay</h2>
-            <p className="mt-6 text-xl leading-relaxed text-flora-grey">These prices and policies demonstrate the intended design only. They are not live inventory, do not include taxes and cannot create a reservation.</p>
+            <p className="mt-6 text-xl leading-relaxed text-flora-grey">Compare Flora's available rate plans and choose the terms that best suit your stay.</p>
           </RevealSection>
           <div className="mt-12 grid gap-5 lg:grid-cols-2">
-            {room.rates.map((rate) => <RateCard key={rate.name} room={room} rate={rate} />)}
+            {room.rates.map((rate) => <RateCard key={rate.id} room={room} rate={rate} />)}
           </div>
         </div>
       </section>

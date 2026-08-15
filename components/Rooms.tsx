@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { Room } from "@/data/hotel";
+import type { Room } from "@/data/rooms";
 import { BrandMark } from "./BrandMark";
 
 function ArrowIcon({ direction = "right" }: { direction?: "left" | "right" }) {
@@ -77,6 +77,10 @@ export function RoomShowcase({ rooms }: { rooms: Room[] }) {
   const track = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState(0);
   const [quickView, setQuickView] = useState<Room | null>(null);
+
+  if (!rooms.length) {
+    return <div className="border border-flora-line bg-flora-ivory p-10 text-center" role="status"><p className="font-display text-3xl">Room information is temporarily unavailable</p><p className="mt-3 text-flora-grey">Please return shortly or contact reservations for assistance.</p></div>;
+  }
 
   function goTo(index: number) {
     const safeIndex = (index + rooms.length) % rooms.length;
@@ -290,18 +294,18 @@ export function RateCard({ room, rate }: { room: Room; rate: Room["rates"][numbe
     <article className="border border-flora-line bg-flora-ivory p-6 transition-shadow hover:shadow-soft">
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div>
-          <p className="eyebrow text-flora-slate">Illustrative rate</p>
+          <p className="eyebrow text-flora-slate">Available rate</p>
           <h3 className="mt-2 font-display text-3xl">{rate.name}</h3>
           <p className="mt-3 max-w-md text-base leading-relaxed text-flora-grey">{rate.policy}</p>
           <p className="mt-2 text-sm italic text-flora-terracotta">{rate.note}</p>
         </div>
         <div className="shrink-0 text-left sm:text-right">
           <p className="eyebrow text-flora-grey">From</p>
-          <p className="font-display text-4xl">€{rate.price}</p>
-          <p className="font-sans text-[0.55rem] uppercase tracking-[0.12em] text-flora-grey">per night · demo</p>
+          <p className="font-display text-4xl">{new Intl.NumberFormat("en-IE", { style: "currency", currency: rate.currency, maximumFractionDigits: 0 }).format(rate.price)}</p>
+          <p className="font-sans text-[0.55rem] uppercase tracking-[0.12em] text-flora-grey">per night</p>
         </div>
       </div>
-      <Link href={`/booking?room=${room.slug}`} className="luxury-button mt-6 border-flora-slate text-flora-slate [--button-fill:var(--flora-slate-blue-deep)]">Choose this rate</Link>
+      <Link href={`/booking?room=${room.slug}&rate=${rate.id}`} className="luxury-button mt-6 border-flora-slate text-flora-slate [--button-fill:var(--flora-slate-blue-deep)]">Choose this rate</Link>
     </article>
   );
 }

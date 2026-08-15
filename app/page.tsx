@@ -1,13 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Footer } from "@/components/Footer";
 import { InfoRequestForm } from "@/components/Forms";
 import { Hero } from "@/components/Hero";
 import { BlurRevealImage, ParallaxImage, RevealSection, ScrollRevealText, SectionTitleScript } from "@/components/Motion";
 import { RoomShowcase } from "@/components/Rooms";
-import { rooms, services } from "@/data/hotel";
+import { services } from "@/data/hotel";
+import { getRooms } from "@/lib/rooms";
 
-export default function HomePage() {
+export default async function HomePage() {
+  await connection();
+  const rooms = await getRooms();
+
   return (
     <main id="main-content">
       <Hero poster="/images/hero-palazzo.jpg" videoSrc="/hero.mp4" />

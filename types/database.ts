@@ -45,3 +45,86 @@ export interface Booking {
   status: BookingStatus;
   created_at: ISODateTime;
 }
+export interface RoomTypeWithRatePlans extends RoomType {
+  rate_plans: RatePlan[];
+}
+
+export type BookingCreate = Pick<
+  Booking,
+  | "guest_name"
+  | "guest_email"
+  | "guest_phone"
+  | "room_type_id"
+  | "rate_plan_id"
+  | "check_in"
+  | "check_out"
+  | "adults"
+  | "children"
+  | "children_ages"
+  | "total_price"
+>;
+
+type RoomTypeInsert = Omit<RoomType, "id" | "created_at"> & { id?: string; created_at?: ISODateTime };
+type RatePlanInsert = Omit<RatePlan, "id" | "created_at" | "currency"> & { id?: string; created_at?: ISODateTime; currency?: string };
+type BookingInsert = Omit<Booking, "id" | "created_at" | "status"> & { id?: string; created_at?: ISODateTime; status?: BookingStatus };
+
+export interface Database {
+  public: {
+    Tables: {
+      room_types: {
+        Row: RoomType & Record<string, unknown>;
+        Insert: RoomTypeInsert & Record<string, unknown>;
+        Update: Partial<RoomTypeInsert> & Record<string, unknown>;
+        Relationships: [];
+      };
+      rate_plans: {
+        Row: RatePlan & Record<string, unknown>;
+        Insert: RatePlanInsert & Record<string, unknown>;
+        Update: Partial<RatePlanInsert> & Record<string, unknown>;
+        Relationships: [
+          {
+            foreignKeyName: "rate_plans_room_type_id_fkey";
+            columns: ["room_type_id"];
+            isOneToOne: false;
+            referencedRelation: "room_types";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      bookings: {
+        Row: Booking & Record<string, unknown>;
+        Insert: BookingInsert & Record<string, unknown>;
+        Update: Partial<BookingInsert> & Record<string, unknown>;
+        Relationships: [
+          {
+            foreignKeyName: "bookings_room_type_id_fkey";
+            columns: ["room_type_id"];
+            isOneToOne: false;
+            referencedRelation: "room_types";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bookings_rate_plan_id_fkey";
+            columns: ["rate_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "rate_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: {
+      check_room_availability: {
+        Args: {
+          p_room_type_id: string;
+          p_check_in: ISODate;
+          p_check_out: ISODate;
+        };
+        Returns: boolean;
+      };
+    };
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+}
