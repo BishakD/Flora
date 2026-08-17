@@ -410,3 +410,69 @@ export async function sendPaymentReceivedEmail(
     html,
   });
 }
+
+/**
+ * 4. "BOOKING CANCELLED" email — sent when admin cancels a booking.
+ *    If refundAmount is provided, includes refund confirmation language.
+ *    If not, only confirms the cancellation with no refund language.
+ */
+export async function sendBookingCancelledEmail(
+  data: BookingEmailData & { refundAmount?: number; refundId?: string },
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const currency = data.currency || "INR";
+  const hasRefund = typeof data.refundAmount === "number" && data.refundAmount > 0;
+  const formattedRefund = hasRefund ? formatMoney(data.refundAmount!, currency) : "";
+
+  const refundRow = hasRefund
+    ? `<tr>
+        <td style="padding:8px 0 4px 0;border-top:1px solid #dcd3c4;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;">Deposit Refunded</td>
+        <td style="padding:8px 0 4px 0;border-top:1px solid #dcd3c4;font-family:Georgia,serif;font-size:16px;color:#1b2a3f;font-weight:bold;" align="right">${formattedRefund}</td>
+      </tr>${
+        data.refundId
+          ? `<tr>
+              <td style="padding:4px 0 8px 0;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;">Refund Reference</td>
+              <td style="padding:4px 0 8px 0;font-family:Georgia,serif;font-size:13px;color:#6b6660;" align="right">${data.refundId}</td>
+            </tr>`
+          : ""
+      }`
+    : "";
+
+  const detailsHtml = `
+    ${buildCommonDetailsRows(data)}
+    <tr>
+      <td style="padding:8px 0 4px 0;border-top:1px solid #dcd3c4;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;">Total Stay Amount</td>
+      <td style="padding:8px 0 4px 0;border-top:1px solid #dcd3c4;font-family:Georgia,serif;font-size:15px;color:#1b2a3f;" align="right">${formatMoney(data.totalPrice, currency)}</td>
+    </tr>
+    ${refundRow}`;
+
+  const refundNoteHtml = hasRefund
+    ? `<div style="margin:24px 0;padding:16px 20px;background-color:#f6f1e7;border-radius:4px;border-left:4px solid #c6a15b;">
+        <p style="margin:0;font-family:Georgia,serif;font-size:14px;color:#1b2a3f;line-height:1.5;">
+          <strong>Deposit Refund:</strong> Your deposit of ${formattedRefund} has been submitted for refund. Refunds typically appear in your original payment method within <strong>5–7 business days</strong>, depending on your bank.
+        </p>
+      </div>
+      <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;line-height:1.6;">
+        If you have not received your refund after 7 business days, please contact us with your refund reference number above and we will follow up with our payments team.
+      </p>`
+    : `<p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;line-height:1.6;">
+        No payment was collected for this reservation, so no refund is necessary. We hope to welcome you to Flora Palazzo on a future occasion.
+      </p>`;
+
+  const intro = hasRefund
+    ? `Dear ${data.guestName},<br><br>We regret to inform you that your reservation at Flora Palazzo has been cancelled. Your deposit of ${formattedRefund} will be refunded to your original payment method within 5–7 business days.`
+    : `Dear ${data.guestName},<br><br>Your reservation at Flora Palazzo has been cancelled. We hope to welcome you to Florence on a future occasion.`;
+
+  const html = emailWrapper({
+    headline: "Reservation cancelled",
+    statusBadge: `<span style="display:inline-block;padding:4px 12px;background-color:#ead3cd;color:#2b2016;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:20px;border:1px solid #d9afa8;">Cancelled${hasRefund ? " · Refund Initiated" : ""}</span>`,
+    messageIntro: intro,
+    detailsHtml,
+    afterNoteHtml: refundNoteHtml,
+  });
+
+  return sendEmail({
+    to: data.guestEmail,
+    subject: `Reservation Cancelled · Flora Palazzo (${data.roomName})`,
+    html,
+  });
+}

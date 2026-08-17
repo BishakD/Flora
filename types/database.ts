@@ -1,7 +1,7 @@
 export type ISODate = string;
 export type ISODateTime = string;
 export type BookingStatus = "pending" | "confirmed" | "cancelled";
-export type PaymentStatus = "unpaid" | "awaiting_payment" | "deposit_paid";
+export type PaymentStatus = "unpaid" | "awaiting_payment" | "deposit_paid" | "refunded" | "refund_failed";
 
 export interface RoomType {
   id: string;

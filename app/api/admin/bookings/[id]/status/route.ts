@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { sendBookingConfirmedEmail } from "@/lib/email";
-import { createRazorpayOrder } from "@/lib/razorpay";
+import { sendBookingConfirmedEmail, sendBookingCancelledEmail } from "@/lib/email";
+import { createRazorpayOrder, createRazorpayRefund } from "@/lib/razorpay";
 import type { BookingStatus, Database } from "@/types/database";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -175,7 +175,108 @@ export async function POST(
       });
     }
 
-    // 3. Other status updates (e.g. cancelled)
+    // 3. Handle cancellation — refund deposit if it was already paid
+    if (nextStatus === "cancelled") {
+      const paymentStatus = (booking as any).payment_status as string | null;
+      const razorpayPaymentId = (booking as any).razorpay_payment_id as string | null;
+      const depositAmount = Number((booking as any).deposit_amount) || 0;
+      const totalPrice = Number(booking.total_price);
+      const roomName = booking.room_types?.name || "Flora Room";
+      const rateName = booking.rate_plans?.name || "Standard Rate";
+      const currency = booking.rate_plans?.currency || "INR";
+
+      let newPaymentStatus: string = paymentStatus || "unpaid";
+      let refundId: string | undefined;
+      let refundAmount: number | undefined;
+      let refundError: string | undefined;
+
+      const depositWasPaid = paymentStatus === "deposit_paid";
+
+      if (depositWasPaid && razorpayPaymentId && depositAmount > 0) {
+        const refundInPaise = Math.round(depositAmount * 100);
+        console.log(`[Admin Status API] Deposit was paid. Attempting Razorpay refund for payment ${razorpayPaymentId} — ₹${depositAmount} (${refundInPaise} paise)...`);
+
+        try {
+          const refund = await createRazorpayRefund({
+            paymentId: razorpayPaymentId,
+            amountInPaise: refundInPaise,
+            notes: {
+              booking_id: id,
+              reason: "Booking cancelled by hotel",
+            },
+          });
+          refundId = refund.id;
+          refundAmount = depositAmount;
+          newPaymentStatus = "refunded";
+          console.log(`[Admin Status API] Razorpay refund succeeded: ${refundId}`);
+        } catch (refundErr: any) {
+          const errMsg = refundErr?.message || String(refundErr);
+          console.error("[Admin Status API] Razorpay refund FAILED:", errMsg);
+          newPaymentStatus = "refund_failed";
+          refundError = errMsg;
+        }
+      } else if (depositWasPaid && !razorpayPaymentId) {
+        // Deposit was marked paid but no payment ID — can't refund, flag it
+        console.warn("[Admin Status API] payment_status=deposit_paid but razorpay_payment_id is missing — cannot refund.");
+        newPaymentStatus = "refund_failed";
+        refundError = "Payment ID missing — manual refund required.";
+      }
+
+      // Update booking: status=cancelled and updated payment_status
+      const { error: updateError } = await supabaseClient
+        .from("bookings")
+        .update({ status: "cancelled", payment_status: newPaymentStatus } as any)
+        .eq("id", id);
+
+      if (updateError) {
+        console.error("[Admin Status API] Supabase cancel update error:", JSON.stringify(updateError, null, 2));
+        return NextResponse.json(
+          {
+            error: updateError.message || "Failed to update booking status",
+            code: updateError.code,
+            details: updateError.details,
+            hint: updateError.hint,
+            source: "supabase_update",
+          },
+          { status: 500 },
+        );
+      }
+
+      // Send cancellation email (non-blocking)
+      try {
+        await sendBookingCancelledEmail({
+          bookingId: id,
+          guestName: booking.guest_name,
+          guestEmail: booking.guest_email,
+          roomName,
+          rateName,
+          checkIn: booking.check_in,
+          checkOut: booking.check_out,
+          adults: booking.adults,
+          children: booking.children,
+          totalPrice,
+          currency,
+          ...(refundAmount !== undefined && { depositAmount: refundAmount, refundAmount }),
+          ...(refundId && { refundId }),
+        });
+      } catch (emailErr: any) {
+        console.error("[Admin Status API] Failed to send cancellation email:", emailErr?.message || emailErr);
+      }
+
+      const responsePayload: Record<string, unknown> = {
+        success: true,
+        status: "cancelled",
+        payment_status: newPaymentStatus,
+        refund_initiated: newPaymentStatus === "refunded",
+      };
+      if (refundId) responsePayload.refund_id = refundId;
+      if (refundAmount !== undefined) responsePayload.refund_amount = refundAmount;
+      if (refundError) responsePayload.refund_error = refundError;
+
+      return NextResponse.json(responsePayload);
+    }
+
+    // 4. Any other status update (future-proofing)
     const { error: updateError } = await supabaseClient
       .from("bookings")
       .update({ status: nextStatus } as any)

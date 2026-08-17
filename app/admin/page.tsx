@@ -72,6 +72,14 @@ function paymentStatusPill(status?: string | null) {
       label: "Deposit Paid",
       className: "bg-flora-sage/70 text-flora-navy border border-flora-sage font-medium",
     },
+    refunded: {
+      label: "Refunded",
+      className: "bg-flora-ice text-flora-slate border border-flora-slate/40 font-medium",
+    },
+    refund_failed: {
+      label: "Refund Failed ⚠",
+      className: "bg-flora-blush text-flora-terracotta border border-flora-rose font-semibold",
+    },
   };
   return map[normalized] ?? map.unpaid;
 }
@@ -238,8 +246,18 @@ export default function AdminDashboardPage() {
       });
 
       if (res.ok) {
+        const data = await res.json();
         setBookings((prev) =>
-          prev.map((b) => (b.id === id ? { ...b, status } : b))
+          prev.map((b) =>
+            b.id === id
+              ? {
+                  ...b,
+                  status,
+                  // Apply payment_status immediately if the API returned one (e.g. refunded, refund_failed)
+                  ...(data.payment_status != null && { payment_status: data.payment_status }),
+                }
+              : b
+          )
         );
       } else {
         const data = await res.json();
@@ -248,6 +266,7 @@ export default function AdminDashboardPage() {
           data.error,
           data.hint ? `\nHint: ${data.hint}` : "",
           data.code ? `\nCode: ${data.code}` : "",
+          data.refund_error ? `\nRefund error: ${data.refund_error}` : "",
         ]
           .filter(Boolean)
           .join("");
