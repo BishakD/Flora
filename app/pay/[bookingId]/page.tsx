@@ -21,9 +21,12 @@ export default async function PaymentPage({
   }
 
   // Fetch booking via security-definer RPC (accessible to anon without exposing table)
+  console.log(`[PaymentPage] Fetching booking for id: "${bookingId}"`);
   const { data: booking, error } = await supabase.rpc("get_booking_for_payment", {
     p_booking_id: bookingId,
   });
+
+  console.log(`[PaymentPage] RPC result — data: ${JSON.stringify(booking)}, error: ${JSON.stringify(error)}`);
 
   if (error || !booking) {
     return (
