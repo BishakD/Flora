@@ -112,21 +112,32 @@ export async function POST(
         );
       }
 
-      // Determine base payment URL
+      // Determine base payment URL (prioritizes NEXT_PUBLIC_SITE_URL in production)
       const origin = request.headers.get("origin") || request.headers.get("referer") || "";
-      let baseUrl = "http://localhost:3000";
-      try {
-        if (origin) {
-          baseUrl = new URL(origin).origin;
-        } else if (process.env.NEXT_PUBLIC_APP_URL) {
-          baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-        } else if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-          baseUrl = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+      let baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        "";
+
+      if (!baseUrl) {
+        try {
+          if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+            baseUrl = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+          } else if (process.env.VERCEL_URL) {
+            baseUrl = `https://${process.env.VERCEL_URL}`;
+          } else if (origin) {
+            baseUrl = new URL(origin).origin;
+          }
+        } catch {
+          baseUrl = "http://localhost:3000";
         }
-      } catch {
+      }
+
+      if (!baseUrl) {
         baseUrl = "http://localhost:3000";
       }
 
+      baseUrl = baseUrl.replace(/\/+$/, "");
       const paymentUrl = `${baseUrl}/pay/${id}`;
 
       // Send "Booking Confirmed" email with deposit payment button

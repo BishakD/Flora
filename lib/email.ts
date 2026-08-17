@@ -300,7 +300,15 @@ export async function sendBookingConfirmedEmail(
       <td style="padding:4px 0 8px 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;" align="right">${formattedBalance} (at hotel)</td>
     </tr>`;
 
-  const payUrl = data.paymentUrl || `https://flora-florence.example/pay/${data.bookingId}`;
+  const defaultBaseUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "http://localhost:3000"
+  ).replace(/\/+$/, "");
+
+  const payUrl = data.paymentUrl || `${defaultBaseUrl}/pay/${data.bookingId}`;
 
   const callToActionHtml = `
     <div style="margin:28px 0;text-align:center;background-color:#f6f1e7;border:1px solid #dcd3c4;padding:24px;border-radius:4px;">

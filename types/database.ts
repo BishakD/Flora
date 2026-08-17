@@ -128,6 +128,67 @@ export interface Database {
         };
         Returns: boolean;
       };
+      get_booking_for_payment: {
+        Args: {
+          p_booking_id: string;
+        };
+        Returns: {
+          id: string;
+          guest_name: string;
+          guest_email: string;
+          guest_phone: string;
+          check_in: string;
+          check_out: string;
+          adults: number;
+          children: number;
+          total_price: number;
+          deposit_amount: number | null;
+          payment_status: string | null;
+          razorpay_order_id: string | null;
+          razorpay_payment_id: string | null;
+          status: string;
+          room_types: {
+            name: string;
+            summary?: string;
+            image_urls?: string[];
+          } | null;
+          rate_plans: {
+            name: string;
+            currency?: string;
+          } | null;
+        } | null;
+      };
+      record_deposit_paid: {
+        Args: {
+          p_booking_id: string;
+          p_razorpay_payment_id?: string | null;
+        };
+        Returns: {
+          id: string;
+          guest_name: string;
+          guest_email: string;
+          guest_phone: string;
+          check_in: string;
+          check_out: string;
+          adults: number;
+          children: number;
+          total_price: number;
+          deposit_amount: number | null;
+          payment_status: string | null;
+          razorpay_order_id: string | null;
+          razorpay_payment_id: string | null;
+          status: string;
+          room_types: {
+            name: string;
+            summary?: string;
+            image_urls?: string[];
+          } | null;
+          rate_plans: {
+            name: string;
+            currency?: string;
+          } | null;
+        } | null;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

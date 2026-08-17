@@ -20,12 +20,10 @@ export default async function PaymentPage({
     notFound();
   }
 
-  // Fetch booking with room types and rate plans
-  const { data: booking, error } = await supabase
-    .from("bookings")
-    .select("*, room_types(name, summary, image_urls), rate_plans!bookings_rate_plan_id_fkey(name, currency)")
-    .eq("id", bookingId)
-    .maybeSingle();
+  // Fetch booking via security-definer RPC (accessible to anon without exposing table)
+  const { data: booking, error } = await supabase.rpc("get_booking_for_payment", {
+    p_booking_id: bookingId,
+  });
 
   if (error || !booking) {
     return (
