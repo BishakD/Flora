@@ -1,3 +1,5 @@
+import nodemailer from "nodemailer";
+
 export interface BookingEmailData {
   bookingId: string;
   guestName: string;
@@ -188,7 +190,7 @@ function buildCommonDetailsRows(data: BookingEmailData): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Resend API Dispatcher
+// Email Dispatcher (Supports Gmail SMTP / Nodemailer & Resend API)
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function sendEmail({
@@ -200,10 +202,41 @@ async function sendEmail({
   subject: string;
   html: string;
 }): Promise<{ success: boolean; id?: string; error?: string }> {
+  const smtpEmail = process.env.SMTP_EMAIL?.trim();
+  const smtpPassword = process.env.SMTP_PASSWORD?.trim();
+
+  // 1. If SMTP credentials (e.g. Gmail) are provided, route via Nodemailer
+  // This allows sending test/production emails to ANY email address / phone
+  if (smtpEmail && smtpPassword) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: smtpEmail,
+          pass: smtpPassword.replace(/\s+/g, ""), // clean any spaces from Google App Password
+        },
+      });
+
+      const info = await transporter.sendMail({
+        from: `Flora Palazzo <${smtpEmail}>`,
+        to,
+        subject,
+        html,
+      });
+
+      console.log(`[Email / SMTP] Email dispatched successfully (${info.messageId}) to ${to}`);
+      return { success: true, id: info.messageId };
+    } catch (smtpErr: any) {
+      console.error("[Email / SMTP] Error dispatching email via Gmail SMTP:", smtpErr);
+      return { success: false, error: smtpErr?.message || String(smtpErr) };
+    }
+  }
+
+  // 2. Otherwise, fall back to Resend API
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
-    console.warn("[Resend] RESEND_API_KEY is not set. Email will not be sent.");
-    return { success: false, error: "RESEND_API_KEY missing" };
+    console.warn("[Email] Neither SMTP credentials nor RESEND_API_KEY are configured. Email will not be sent.");
+    return { success: false, error: "No email credentials configured" };
   }
 
   const fromEmail =
