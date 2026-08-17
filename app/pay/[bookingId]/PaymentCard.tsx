@@ -131,6 +131,18 @@ export function PaymentCard({ booking }: { booking: BookingForPayment }) {
     };
 
     try {
+      // DIAGNOSTIC: log exact options being passed to Razorpay checkout
+      console.log("[RazorpayCheckout] Options passed to new Razorpay():", JSON.stringify({
+        key: options.key,
+        amount: options.amount,
+        currency: options.currency,
+        order_id: options.order_id,
+        name: options.name,
+        description: options.description,
+        prefill: options.prefill,
+      }, null, 2));
+      console.log("[RazorpayCheckout] Raw booking.razorpay_order_id value:", booking.razorpay_order_id);
+      console.log("[RazorpayCheckout] Raw depositAmount (rupees):", depositAmount, "→ paise:", Math.round(depositAmount * 100));
       const razorpayInstance = new (window as any).Razorpay(options);
       razorpayInstance.open();
     } catch (err) {
