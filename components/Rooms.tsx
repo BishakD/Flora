@@ -301,7 +301,7 @@ export function RateCard({ room, rate }: { room: Room; rate: Room["rates"][numbe
         </div>
         <div className="shrink-0 text-left sm:text-right">
           <p className="eyebrow text-flora-grey">From</p>
-          <p className="font-display text-4xl">{new Intl.NumberFormat("en-IE", { style: "currency", currency: rate.currency, maximumFractionDigits: 0 }).format(rate.price)}</p>
+          <p className="font-display text-4xl">{new Intl.NumberFormat("en-IN", { style: "currency", currency: rate.currency || "INR", maximumFractionDigits: 0 }).format(rate.price)}</p>
           <p className="font-sans text-[0.55rem] uppercase tracking-[0.12em] text-flora-grey">per night</p>
         </div>
       </div>

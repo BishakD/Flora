@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Room, RoomRate } from "@/data/rooms";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { BookingCreate } from "@/types/database";
@@ -62,9 +62,9 @@ function calendarNights(start: Date, end: Date) {
 }
 
 function formatMoney(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IE", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency,
+    currency: currency || "INR",
     maximumFractionDigits: 0,
   }).format(amount);
 }
@@ -197,6 +197,9 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
   const [bookingError, setBookingError] = useState("");
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
 
+  // Ref for the results section — used to scroll into view after search runs.
+  const resultsRef = useRef<HTMLElement>(null);
+
   const filteredRooms = useMemo(
     () => initialRoom
       ? [...rooms.filter((room) => room.slug === initialRoom), ...rooms.filter((room) => room.slug !== initialRoom)]
@@ -255,8 +258,28 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
     setSelection(preferredRoom && preferredRate ? { room: preferredRoom, rate: preferredRate } : null);
     setError("");
     setState("loading");
-    window.setTimeout(() => setState(eligibleRooms.length ? "ready" : "empty"), 450);
+    window.setTimeout(() => {
+      setState(eligibleRooms.length ? "ready" : "empty");
+      // Scroll to results so the user always sees them — whether search was
+      // auto-triggered from params or manually clicked.
+      window.requestAnimationFrame(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }, 450);
   }
+
+  // Auto-trigger search when the booking page is opened with pre-populated
+  // dates (i.e. the user clicked "Check Availability" on a room detail page).
+  // Only fires once on mount when both dates are present.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (initialCheckIn && initialCheckOut && rooms.length) {
+      search();
+    }
+  // Intentionally only runs once on mount — search() captures the initial
+  // state values correctly at that point.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function chooseRate(room: Room, rate: RoomRate) {
     setSelection({ room, rate });
@@ -268,10 +291,6 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
   async function submitBooking(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selection || !start || !end) return;
-    if (!isSupabaseConfigured) {
-      setBookingError("Supabase is not configured yet. Add the project URL and publishable key to .env.local, then restart the site.");
-      return;
-    }
 
     const checkIn = toIso(start);
     const checkOut = toIso(end);
@@ -280,27 +299,9 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
     const totalPrice = selection.rate.price * nights;
 
     setBookingError("");
-    setSubmitState("checking");
+    setSubmitState("saving");
 
-    const { data: available, error: availabilityError } = await supabase.rpc("check_room_availability", {
-      p_room_type_id: selection.room.id,
-      p_check_in: checkIn,
-      p_check_out: checkOut,
-    });
-
-    if (availabilityError) {
-      setSubmitState("idle");
-      setBookingError("We could not verify availability right now. Please try again shortly.");
-      return;
-    }
-
-    if (!available) {
-      setSubmitState("idle");
-      setBookingError("This room appears to be booked for the selected dates. Please choose another room or adjust your stay.");
-      return;
-    }
-
-    const booking: BookingCreate = {
+    const bookingPayload = {
       guest_name: guestName.trim(),
       guest_email: guestEmail.trim(),
       guest_phone: guestPhone.trim(),
@@ -314,27 +315,43 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
       total_price: totalPrice,
     };
 
-    setSubmitState("saving");
-    const { error: insertError } = await supabase.from("bookings").insert(booking);
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingPayload),
+      });
 
-    if (insertError) {
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setSubmitState("idle");
+        setBookingError(
+          data.error ||
+            "Your reservation request could not be saved. Please review the details and try again.",
+        );
+        return;
+      }
+
+      setConfirmation({
+        guestName: bookingPayload.guest_name,
+        roomName: selection.room.name,
+        rateName: selection.rate.name,
+        checkIn,
+        checkOut,
+        guests: adults + children,
+        nights,
+        totalPrice,
+        currency: selection.rate.currency,
+      });
       setSubmitState("idle");
-      setBookingError("Your reservation request could not be saved. Please review the details and try again.");
-      return;
+    } catch (err) {
+      console.error("[Booking Submit Error]", err);
+      setSubmitState("idle");
+      setBookingError(
+        "A network error occurred while submitting your reservation. Please try again.",
+      );
     }
-
-    setConfirmation({
-      guestName: booking.guest_name,
-      roomName: selection.room.name,
-      rateName: selection.rate.name,
-      checkIn,
-      checkOut,
-      guests: adults + children,
-      nights,
-      totalPrice,
-      currency: selection.rate.currency,
-    });
-    setSubmitState("idle");
   }
 
   const stayNights = start && end ? calendarNights(start, end) : 0;
@@ -389,7 +406,7 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
         </div>
       </section>
 
-      <section className="botanical textured section-pad min-h-[600px] bg-flora-blush" aria-labelledby="results-title">
+      <section ref={resultsRef} className="botanical textured section-pad min-h-[600px] bg-flora-blush" aria-labelledby="results-title">
         <div className="container-shell">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div><p className="eyebrow text-flora-terracotta">3 · Your stay</p><h2 id="results-title" className="display-title mt-3 text-[clamp(3.2rem,6vw,6rem)]">Select a room</h2></div>

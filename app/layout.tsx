@@ -43,6 +43,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${cormorant.variable} ${italianno.variable} ${montserrat.variable}`}>
+      <head>
+        {/* Warm up the Supabase connection before any server fetch fires */}
+        <link rel="preconnect" href="https://aefyypoishtuaidzjcmb.supabase.co" />
+      </head>
       <body suppressHydrationWarning>
         <InertialScroll />
         <a className="skip-link" href="#main-content">

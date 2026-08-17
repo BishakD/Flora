@@ -1,6 +1,7 @@
 export type ISODate = string;
 export type ISODateTime = string;
 export type BookingStatus = "pending" | "confirmed" | "cancelled";
+export type PaymentStatus = "unpaid" | "awaiting_payment" | "deposit_paid";
 
 export interface RoomType {
   id: string;
@@ -42,6 +43,10 @@ export interface Booking {
   children: number;
   children_ages: number[];
   total_price: number;
+  deposit_amount?: number | null;
+  payment_status?: PaymentStatus | null;
+  razorpay_order_id?: string | null;
+  razorpay_payment_id?: string | null;
   status: BookingStatus;
   created_at: ISODateTime;
 }

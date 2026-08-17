@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   description: "Choose your Flora room, stay dates and rate, then send a secure reservation request.",
 };
 
+// Cache this route for 60 s — eliminates a cold Supabase round-trip on every visit.
+// Room data changes rarely; the booking form itself is all client-side.
+export const revalidate = 60;
+
 type BookingSearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function BookingPage({ searchParams }: { searchParams: BookingSearchParams }) {

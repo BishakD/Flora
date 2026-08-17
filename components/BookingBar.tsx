@@ -27,7 +27,7 @@ function Stepper({ label, value, min, max, onChange }: { label: string; value: n
   );
 }
 
-export function BookingBar({ compact = false, cartCount = 0 }: { compact?: boolean; cartCount?: number }) {
+export function BookingBar({ compact = false, cartCount = 0, roomSlug }: { compact?: boolean; cartCount?: number; roomSlug?: string }) {
   const router = useRouter();
   const popover = useRef<HTMLDivElement>(null);
   const [guestsOpen, setGuestsOpen] = useState(false);
@@ -72,6 +72,7 @@ export function BookingBar({ compact = false, cartCount = 0 }: { compact?: boole
     }
     setError("");
     const params = new URLSearchParams({ adults: String(adults), children: String(children), checkIn, checkOut });
+    if (roomSlug) params.set("room", roomSlug);
     router.push(`/booking?${params.toString()}`);
   }
 

@@ -53,7 +53,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
             <ScrollRevealText className="mt-6 text-[clamp(1.35rem,2.35vw,2rem)] leading-[1.72]">{room.description}</ScrollRevealText>
           </div>
           <div className="mt-14">
-            <BookingBar compact />
+            <BookingBar compact roomSlug={room.slug} />
           </div>
         </div>
       </section>

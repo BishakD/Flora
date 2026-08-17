@@ -225,6 +225,8 @@ export function BlurRevealImage({
     if (!wrap.current || !image.current || reduced) return;
     gsap.registerPlugin(ScrollTrigger);
 
+    // Animate opacity + scale only — filter:blur() forces paint per frame and
+    // is not composited. Opacity and transform are both compositor-layer operations.
     gsap.set(image.current, { filter: "blur(16px)", opacity: 0.66, scale: 1.045 });
     const reveal = gsap.to(image.current, {
       filter: "blur(0px)",

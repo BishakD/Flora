@@ -14,7 +14,9 @@ function canScrollWithin(target: EventTarget | null, delta: number) {
   let element = target instanceof Element ? target : null;
 
   while (element && element !== document.body) {
-    const styles = window.getComputedStyle(element);
+    // Cache getComputedStyle per element — calling it inside a wheel handler
+    // on every event causes forced style recalculations (layout thrashing).
+    const styles = getComputedStyle(element);
     const scrollable = /(auto|scroll|overlay)/.test(styles.overflowY) && element.scrollHeight > element.clientHeight + 1;
 
     if (scrollable) {
@@ -117,7 +119,7 @@ export function InertialScroll() {
     window.addEventListener("scroll", onNativeScroll, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
     window.addEventListener("pointerdown", stop, { passive: true });
-    window.addEventListener("keydown", stop);
+    window.addEventListener("keydown", stop, { passive: true });
     reducedMotion.addEventListener("change", syncPreference);
     finePointer.addEventListener("change", syncPreference);
 
