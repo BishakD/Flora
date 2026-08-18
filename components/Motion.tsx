@@ -220,6 +220,7 @@ export function BlurRevealImage({
   const wrap = useRef<HTMLDivElement>(null);
   const image = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const isArch = className.includes("arch-frame");
 
   useEffect(() => {
     if (!wrap.current || !image.current || reduced) return;
@@ -249,10 +250,34 @@ export function BlurRevealImage({
   }, [reduced]);
 
   return (
-    <div ref={wrap} className={`relative overflow-hidden ${className}`}>
-      <div ref={image} className="absolute inset-0 will-change-[filter,transform,opacity]">
+    <div ref={wrap} className={`relative ${isArch ? "isolate" : "overflow-hidden"} ${className}`}>
+      <div
+        ref={image}
+        className={`absolute inset-0 will-change-[filter,transform,opacity] ${
+          isArch ? "arch-frame-inner overflow-hidden" : ""
+        }`}
+      >
         <Image src={src} alt={alt} fill sizes={sizes} preload={priority} className={`object-cover ${imageClassName}`} />
       </div>
+
+      {isArch && (
+        <svg
+          className="pointer-events-none absolute inset-0 size-full select-none z-10"
+          viewBox="0 0 1000 1300"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M 500 40 C 632 40 740 128 740 240 C 740 262 754 275 775 275 L 865 275 C 930 275 980 310 980 375 L 980 1245 Q 980 1280 945 1280 L 55 1280 Q 20 1280 20 1245 L 20 375 C 20 310 70 275 135 275 L 225 275 C 246 275 260 262 260 240 C 260 128 368 40 500 40 Z"
+            fill="none"
+            stroke="#b89758"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      )}
     </div>
   );
 }

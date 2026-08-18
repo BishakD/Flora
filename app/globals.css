@@ -205,14 +205,12 @@ a {
 }
 
 .arch-frame {
-  overflow: hidden;
-  border-radius: 0 0 1.25rem 1.25rem;
-  -webkit-mask:
-    radial-gradient(ellipse 38% 18% at 50% 18%, #000 99%, transparent 100%) 0 0 / 100% 36% no-repeat,
-    linear-gradient(#000 0 0) 0 18% / 100% 82% no-repeat;
-  mask:
-    radial-gradient(ellipse 38% 18% at 50% 18%, #000 99%, transparent 100%) 0 0 / 100% 36% no-repeat,
-    linear-gradient(#000 0 0) 0 18% / 100% 82% no-repeat;
+  position: relative;
+}
+
+.arch-frame-inner {
+  clip-path: url(#flora-arch-clip);
+  -webkit-clip-path: url(#flora-arch-clip);
 }
 
 .notched-button,
