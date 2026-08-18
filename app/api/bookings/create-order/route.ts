@@ -63,38 +63,79 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Compute deposit
+    // 3. Compute deposit amount
     const depositAmount = Math.round(total_price * 0.25 * 100) / 100;
     const depositInPaise = Math.round(depositAmount * 100);
 
-    // 4. Insert booking as 'pending' first (satisfies RLS insert policy)
-    const { data: insertedRows, error: insertError } = await supabase
-      .from("bookings")
-      .insert({
-        guest_name: guest_name.trim(),
-        guest_email: guest_email.trim(),
-        guest_phone: guest_phone.trim(),
-        room_type_id,
-        rate_plan_id,
-        check_in,
-        check_out,
-        adults,
-        children,
-        children_ages,
-        total_price,
-      })
-      .select("id")
-      .single();
+    let bookingId: string | null = null;
 
-    if (insertError || !insertedRows?.id) {
-      console.error("[CreateOrder] Insert error:", insertError);
+    // 4. Try Security-Definer RPC 'create_guest_booking' first (bypasses RLS SELECT restrictions)
+    const { data: rpcData, error: rpcError } = await supabase.rpc("create_guest_booking", {
+      p_guest_name: guest_name.trim(),
+      p_guest_email: guest_email.trim(),
+      p_guest_phone: guest_phone.trim(),
+      p_room_type_id: room_type_id,
+      p_rate_plan_id: rate_plan_id,
+      p_check_in: check_in,
+      p_check_out: check_out,
+      p_adults: adults,
+      p_children: children,
+      p_children_ages: children_ages,
+      p_total_price: total_price,
+    });
+
+    if (!rpcError && rpcData?.id) {
+      bookingId = rpcData.id as string;
+      console.log(`[CreateOrder] Booking created via RPC: ${bookingId}`);
+    } else {
+      if (rpcError) {
+        console.warn("[CreateOrder] RPC create_guest_booking not available or failed:", rpcError.message);
+      }
+
+      // Fallback: Direct table insertion
+      const { data: insertedRows, error: insertError } = await supabase
+        .from("bookings")
+        .insert({
+          guest_name: guest_name.trim(),
+          guest_email: guest_email.trim(),
+          guest_phone: guest_phone.trim(),
+          room_type_id,
+          rate_plan_id,
+          check_in,
+          check_out,
+          adults,
+          children,
+          children_ages,
+          total_price,
+          deposit_amount: depositAmount,
+          status: "confirmed",
+          payment_status: "awaiting_payment",
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !insertedRows?.id) {
+        console.error("[CreateOrder] Insert error:", insertError);
+        return NextResponse.json(
+          {
+            error:
+              "Could not save your reservation. Please run the SQL patch in Supabase or contact support.",
+            details: insertError?.message,
+            hint: insertError?.hint,
+          },
+          { status: 500 },
+        );
+      }
+
+      bookingId = insertedRows.id as string;
+    }
+
+    if (!bookingId) {
       return NextResponse.json(
-        { error: "Could not save your reservation. Please try again." },
+        { error: "Could not create reservation record. Please try again." },
         { status: 500 },
       );
     }
-
-    const bookingId = insertedRows.id as string;
 
     // 5. Create Razorpay order
     let razorpayOrderId: string | null = null;
@@ -112,7 +153,7 @@ export async function POST(request: Request) {
       console.log(`[CreateOrder] Razorpay order created: ${razorpayOrderId} for booking ${bookingId}`);
     } catch (orderErr: any) {
       console.error("[CreateOrder] Razorpay order creation failed:", orderErr?.message || orderErr);
-      // Clean up orphaned booking row so it doesn't block the room
+      // Clean up orphaned booking row
       await supabase.from("bookings").delete().eq("id", bookingId);
       return NextResponse.json(
         { error: "Payment gateway is unavailable. Please try again in a moment." },
@@ -120,26 +161,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 6. Promote booking to confirmed + awaiting_payment with order details
-    //    (anon UPDATE grant on these columns is set in payment_rls.sql)
+    // 6. Update booking with razorpay_order_id
     const { error: updateError } = await supabase
       .from("bookings")
       .update({
-        status: "confirmed",
-        payment_status: "awaiting_payment",
-        deposit_amount: depositAmount,
         razorpay_order_id: razorpayOrderId,
       } as any)
       .eq("id", bookingId);
 
     if (updateError) {
-      console.error("[CreateOrder] Update error:", updateError);
-      // Best-effort cleanup — don't fail silently
-      await supabase.from("bookings").delete().eq("id", bookingId);
-      return NextResponse.json(
-        { error: "Could not confirm your reservation. Please try again." },
-        { status: 500 },
-      );
+      console.warn("[CreateOrder] Update razorpay_order_id warning:", updateError.message);
     }
 
     return NextResponse.json(

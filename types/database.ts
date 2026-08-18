@@ -120,6 +120,25 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      create_guest_booking: {
+        Args: {
+          p_guest_name: string;
+          p_guest_email: string;
+          p_guest_phone: string;
+          p_room_type_id: string;
+          p_rate_plan_id: string;
+          p_check_in: ISODate;
+          p_check_out: ISODate;
+          p_adults: number;
+          p_children: number;
+          p_children_ages: number[];
+          p_total_price: number;
+        };
+        Returns: {
+          id: string;
+          deposit_amount: number;
+        } | null;
+      };
       check_room_availability: {
         Args: {
           p_room_type_id: string;
