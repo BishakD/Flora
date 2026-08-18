@@ -46,7 +46,7 @@ export function Nav() {
           {leftLinks.map(([label, href]) => <Link key={label} href={href} className="nav-link whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] text-flora-charcoal">{label}</Link>)}
         </div>
 
-        <Link href="/booking" className="notched-button col-start-1 row-start-1 min-w-[68px] justify-self-start bg-flora-blue px-3 py-2 text-center font-sans text-[0.55rem] font-medium uppercase tracking-[0.14em] text-flora-ivory lg:hidden">Book</Link>
+        <Link href="/booking" className="notched-button col-start-1 row-start-1 min-w-[78px] justify-self-start bg-[#48667c] px-3.5 py-2 text-center font-sans text-[0.58rem] font-normal uppercase tracking-[0.18em] text-flora-gold transition-colors hover:bg-[#3f5c71] lg:hidden [--notch-r:7px]">Book</Link>
 
         <Link href="/" className="col-start-2 flex flex-col items-center justify-center leading-none" aria-label="Flora home">
           <span className="font-display text-[1.25rem] tracking-[0.08em] text-flora-blue lg:text-[1.32rem]">FLORA</span>
@@ -55,7 +55,7 @@ export function Nav() {
 
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-[clamp(.8rem,1.7vw,1.75rem)]">
           <Link href="/#contact" className="nav-link hidden whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] lg:block">Contacts</Link>
-          <Link href="/booking" className="notched-button hidden min-w-[136px] bg-flora-blue px-6 py-2.5 text-center font-sans text-[0.58rem] font-medium uppercase tracking-[0.15em] text-flora-ivory lg:block">Book now</Link>
+          <Link href="/booking" className="notched-button hidden min-w-[172px] bg-[#48667c] px-8 py-3 text-center font-sans text-[0.7rem] font-normal uppercase tracking-[0.24em] text-flora-gold transition-colors hover:bg-[#3f5c71] lg:inline-flex [--notch-r:11px]">BOOK NOW</Link>
           <button type="button" className="flex size-10 items-center justify-center rounded-full border border-flora-line text-flora-charcoal lg:hidden" aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? "Close navigation" : "Open navigation"} onClick={() => setOpen((value) => !value)}>
             <span className="relative block h-4 w-5" aria-hidden="true">
               <span className={`absolute left-0 top-1 h-px w-5 bg-current transition-transform ${open ? "translate-y-[3px] rotate-45" : ""}`} />

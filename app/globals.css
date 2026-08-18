@@ -11,7 +11,7 @@
   --flora-blush: #ead3cd;
   --flora-rose-dust: #d9afa8;
   --flora-terracotta: #b65c4a;
-  --flora-gold: #c6a15b;
+  --flora-gold: #be9b5a;
   --flora-espresso: #2b2016;
   --flora-charcoal-text: #2a2a28;
   --flora-warm-grey: #6b6660;
@@ -20,7 +20,7 @@
   --flora-sage: #d4d9d1;
   --flora-powder: #9cb6c5;
   --font-body: var(--font-display);
-  --nav-height: 56px;
+  --nav-height: 64px;
 }
 
 * {
@@ -216,13 +216,17 @@ a {
 .notched-button,
 .room-title-pill {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   isolation: isolate;
-  --notch-r: 7px;
-  --notch-mask: radial-gradient(circle var(--notch-r) at var(--notch-r) var(--notch-r), transparent 97%, #000 100%) calc(-1 * var(--notch-r)) calc(-1 * var(--notch-r));
+  --notch-r: 10px;
+  --notch-mask: radial-gradient(circle var(--notch-r) at var(--notch-r) var(--notch-r), transparent 98%, #000 100%) calc(-1 * var(--notch-r)) calc(-1 * var(--notch-r));
   -webkit-mask: var(--notch-mask);
   mask: var(--notch-mask);
-  filter: drop-shadow(0 3px 6px rgba(27, 42, 63, 0.18)) drop-shadow(0 1px 2px rgba(27, 42, 63, 0.12));
+  filter: drop-shadow(0 4px 10px rgba(27, 42, 63, 0.20)) drop-shadow(0 1px 3px rgba(27, 42, 63, 0.12));
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+  text-decoration: none;
 }
 
 .notched-button::after,
@@ -231,7 +235,7 @@ a {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.42);
+  border: 1.75px solid var(--flora-gold);
   -webkit-mask: var(--notch-mask);
   mask: var(--notch-mask);
 }
@@ -239,7 +243,7 @@ a {
 .notched-button:hover,
 .room-title-pill:hover {
   transform: translateY(-1px);
-  filter: drop-shadow(0 5px 12px rgba(27, 42, 63, 0.24)) drop-shadow(0 2px 4px rgba(27, 42, 63, 0.14));
+  filter: drop-shadow(0 7px 16px rgba(27, 42, 63, 0.28)) drop-shadow(0 2px 5px rgba(27, 42, 63, 0.16));
 }
 
 .notched-button:active,
