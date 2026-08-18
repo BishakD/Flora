@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Script from "next/script";
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -15,8 +16,11 @@ type Selection = {
   rate: RoomRate;
 };
 
-type Confirmation = {
+// Booking confirmed screen data
+type BookingConfirmed = {
+  bookingId: string;
   guestName: string;
+  guestEmail: string;
   roomName: string;
   rateName: string;
   checkIn: string;
@@ -24,7 +28,10 @@ type Confirmation = {
   guests: number;
   nights: number;
   totalPrice: number;
+  depositAmount: number;
+  remainingBalance: number;
   currency: string;
+  paymentId: string;
 };
 
 function atNoon(date: Date) {
@@ -67,6 +74,17 @@ function formatMoney(amount: number, currency: string) {
     currency: currency || "INR",
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+function formatDateStr(dateStr: string): string {
+  try {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    if (!y || !m || !d) return dateStr;
+    const date = new Date(y, m - 1, d, 12);
+    return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
+  } catch {
+    return dateStr;
+  }
 }
 
 function CalendarMonth({ month, start, end, invalidDate, onSelect }: { month: Date; start: DateValue; end: DateValue; invalidDate: string; onSelect: (date: Date) => void }) {
@@ -193,9 +211,12 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
-  const [submitState, setSubmitState] = useState<"idle" | "checking" | "saving">("idle");
+
+  // Multi-step submit states
+  type SubmitState = "idle" | "creating-order" | "payment-open" | "verifying";
+  const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [bookingError, setBookingError] = useState("");
-  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const [confirmed, setConfirmed] = useState<BookingConfirmed | null>(null);
 
   // Ref for the results section — used to scroll into view after search runs.
   const resultsRef = useRef<HTMLElement>(null);
@@ -213,7 +234,7 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
 
   function resetSelection() {
     setSelection(null);
-    setConfirmation(null);
+    setConfirmed(null);
     setBookingError("");
   }
 
@@ -260,30 +281,25 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
     setState("loading");
     window.setTimeout(() => {
       setState(eligibleRooms.length ? "ready" : "empty");
-      // Scroll to results so the user always sees them — whether search was
-      // auto-triggered from params or manually clicked.
       window.requestAnimationFrame(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }, 450);
   }
 
-  // Auto-trigger search when the booking page is opened with pre-populated
-  // dates (i.e. the user clicked "Check Availability" on a room detail page).
-  // Only fires once on mount when both dates are present.
+  // Auto-trigger search when the booking page is opened with pre-populated dates
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (initialCheckIn && initialCheckOut && rooms.length) {
       search();
     }
-  // Intentionally only runs once on mount — search() captures the initial
-  // state values correctly at that point.
+  // Intentionally only runs once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function chooseRate(room: Room, rate: RoomRate) {
     setSelection({ room, rate });
-    setConfirmation(null);
+    setConfirmed(null);
     setBookingError("");
     window.requestAnimationFrame(() => document.getElementById("guest-details")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
@@ -297,68 +313,177 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
     const parsedAges = ages.map(Number);
     const nights = calendarNights(start, end);
     const totalPrice = selection.rate.price * nights;
+    const currency = selection.rate.currency;
 
     setBookingError("");
-    setSubmitState("saving");
+    setSubmitState("creating-order");
 
-    const bookingPayload = {
-      guest_name: guestName.trim(),
-      guest_email: guestEmail.trim(),
-      guest_phone: guestPhone.trim(),
-      room_type_id: selection.room.id,
-      rate_plan_id: selection.rate.id,
-      check_in: checkIn,
-      check_out: checkOut,
-      adults,
-      children,
-      children_ages: parsedAges,
-      total_price: totalPrice,
-    };
+    // Step 1: Create booking row + Razorpay order on the server
+    let bookingId: string;
+    let razorpayOrderId: string;
+    let depositAmount: number;
 
     try {
-      const res = await fetch("/api/bookings", {
+      const res = await fetch("/api/bookings/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingPayload),
+        body: JSON.stringify({
+          guest_name: guestName.trim(),
+          guest_email: guestEmail.trim(),
+          guest_phone: guestPhone.trim(),
+          room_type_id: selection.room.id,
+          rate_plan_id: selection.rate.id,
+          check_in: checkIn,
+          check_out: checkOut,
+          adults,
+          children,
+          children_ages: parsedAges,
+          total_price: totalPrice,
+        } satisfies BookingCreate),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
         setSubmitState("idle");
-        setBookingError(
-          data.error ||
-            "Your reservation request could not be saved. Please review the details and try again.",
-        );
+        setBookingError(data.error || "Could not initiate your booking. Please try again.");
         return;
       }
 
-      setConfirmation({
-        guestName: bookingPayload.guest_name,
-        roomName: selection.room.name,
-        rateName: selection.rate.name,
-        checkIn,
-        checkOut,
-        guests: adults + children,
-        nights,
-        totalPrice,
-        currency: selection.rate.currency,
-      });
-      setSubmitState("idle");
+      bookingId = data.bookingId as string;
+      razorpayOrderId = data.razorpayOrderId as string;
+      depositAmount = data.depositAmount as number;
     } catch (err) {
-      console.error("[Booking Submit Error]", err);
+      console.error("[BookingFlow] create-order network error:", err);
       setSubmitState("idle");
-      setBookingError(
-        "A network error occurred while submitting your reservation. Please try again.",
-      );
+      setBookingError("A network error occurred. Please check your connection and try again.");
+      return;
+    }
+
+    // Step 2: Open Razorpay modal directly on this page
+    if (typeof window === "undefined" || !(window as any).Razorpay) {
+      setSubmitState("idle");
+      setBookingError("Payment gateway is loading. Please try again in a moment.");
+      // Best-effort cleanup of the draft booking
+      fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(() => {});
+      return;
+    }
+
+    setSubmitState("payment-open");
+
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
+    const remainingBalance = Math.max(0, Math.round((totalPrice - depositAmount) * 100) / 100);
+    const roomName = selection.room.name;
+    const rateName = selection.rate.name;
+
+    const options = {
+      key: keyId,
+      amount: Math.round(depositAmount * 100),
+      currency: "INR",
+      name: "Flora Palazzo",
+      description: `25% Deposit · ${roomName}`,
+      order_id: razorpayOrderId,
+      prefill: {
+        name: guestName.trim(),
+        email: guestEmail.trim(),
+        contact: guestPhone.trim(),
+      },
+      theme: { color: "#1B2A3F" },
+      modal: {
+        ondismiss: () => {
+          // Guest closed modal without paying — delete the draft booking row
+          console.log("[BookingFlow] Modal dismissed without payment — cleaning up booking", bookingId);
+          fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(() => {});
+          setSubmitState("idle");
+          setBookingError("Payment was not completed. Your dates remain available — feel free to try again.");
+        },
+      },
+      handler: async (response: {
+        razorpay_payment_id: string;
+        razorpay_order_id: string;
+        razorpay_signature: string;
+      }) => {
+        setSubmitState("verifying");
+        try {
+          const verifyRes = await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+
+          const verifyData = await verifyRes.json();
+
+          if (!verifyRes.ok || !verifyData.success) {
+            // Could be a race condition where room was taken
+            if (verifyData.roomUnavailable) {
+              setBookingError(verifyData.error || "This room was just booked by another guest. Your payment has been automatically refunded.");
+            } else {
+              setBookingError(verifyData.error || "Payment verification failed. Please contact our concierge team.");
+            }
+            setSubmitState("idle");
+            return;
+          }
+
+          // Success — show confirmation screen
+          setConfirmed({
+            bookingId,
+            guestName: guestName.trim(),
+            guestEmail: guestEmail.trim(),
+            roomName,
+            rateName,
+            checkIn,
+            checkOut,
+            guests: adults + children,
+            nights,
+            totalPrice,
+            depositAmount,
+            remainingBalance,
+            currency,
+            paymentId: response.razorpay_payment_id,
+          });
+          setSubmitState("idle");
+        } catch (err) {
+          console.error("[BookingFlow] Verify network error:", err);
+          setBookingError("Network error verifying payment. Please contact our concierge — your payment may have been captured.");
+          setSubmitState("idle");
+        }
+      },
+    };
+
+    try {
+      const razorpayInstance = new (window as any).Razorpay(options);
+      razorpayInstance.open();
+    } catch (err) {
+      console.error("[BookingFlow] Razorpay open error:", err);
+      setSubmitState("idle");
+      setBookingError("Failed to open payment window. Please try again.");
+      fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(() => {});
     }
   }
 
   const stayNights = start && end ? calendarNights(start, end) : 0;
   const selectionTotal = selection ? selection.rate.price * stayNights : 0;
 
+  const isSubmitting = submitState !== "idle";
+  const buttonLabel =
+    submitState === "creating-order"
+      ? "Preparing checkout…"
+      : submitState === "payment-open"
+      ? "Payment window open…"
+      : submitState === "verifying"
+      ? "Confirming payment…"
+      : "Proceed to Payment";
+
   return (
     <div>
+      {/* Preload Razorpay Checkout.js so the modal opens instantly */}
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+
       <section className="sticky top-[var(--nav-height)] z-30 border-y border-flora-line bg-flora-cream/95 shadow-[0_12px_40px_rgba(43,32,22,.08)] backdrop-blur-md">
         <div className="container-shell flex min-h-16 items-center justify-between gap-5 py-3">
           <p className="eyebrow text-flora-slate">Flora reservations</p>
@@ -446,30 +571,66 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
             </div>
           ) : null}
 
-          {confirmation ? (
+          {/* ── Booking Confirmed Success Screen ── */}
+          {confirmed ? (
             <section id="guest-details" className="mt-10 border border-flora-gold bg-flora-ivory p-7 shadow-soft sm:p-10" aria-live="polite">
-              <p className="eyebrow text-flora-gold">Reservation request received</p>
-              <h2 className="mt-4 font-display text-[clamp(2.6rem,5vw,4.6rem)] leading-none">Thank you, {confirmation.guestName}</h2>
-              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-flora-grey">Your request is pending. Flora's reservations team will review the stay details and contact you using the information provided.</p>
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 items-center justify-center rounded-full bg-flora-navy text-flora-ivory">✓</span>
+                <p className="eyebrow text-flora-gold">Reservation Confirmed</p>
+              </div>
+              <h2 className="mt-4 font-display text-[clamp(2.6rem,5vw,4.6rem)] leading-none">Thank you, {confirmed.guestName}</h2>
+              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-flora-grey">
+                Your deposit has been received and your reservation at Flora Palazzo is fully secured. A confirmation has been sent to <strong className="text-flora-charcoal">{confirmed.guestEmail}</strong>.
+              </p>
               <dl className="mt-8 grid gap-5 border-y border-flora-line py-6 sm:grid-cols-2 lg:grid-cols-4">
-                <div><dt className="eyebrow text-flora-grey">Room and rate</dt><dd className="mt-2 text-lg">{confirmation.roomName}<br />{confirmation.rateName}</dd></div>
-                <div><dt className="eyebrow text-flora-grey">Stay</dt><dd className="mt-2 text-lg">{confirmation.checkIn}<br />to {confirmation.checkOut}</dd></div>
-                <div><dt className="eyebrow text-flora-grey">Guests</dt><dd className="mt-2 text-lg">{confirmation.guests} · {confirmation.nights} {confirmation.nights === 1 ? "night" : "nights"}</dd></div>
-                <div><dt className="eyebrow text-flora-grey">Estimated total</dt><dd className="mt-2 font-display text-3xl">{formatMoney(confirmation.totalPrice, confirmation.currency)}</dd></div>
+                <div><dt className="eyebrow text-flora-grey">Room &amp; Rate</dt><dd className="mt-2 text-lg">{confirmed.roomName}<br />{confirmed.rateName}</dd></div>
+                <div><dt className="eyebrow text-flora-grey">Stay</dt><dd className="mt-2 text-lg">{confirmed.checkIn}<br />to {confirmed.checkOut}</dd></div>
+                <div><dt className="eyebrow text-flora-grey">Guests · Nights</dt><dd className="mt-2 text-lg">{confirmed.guests} · {confirmed.nights} {confirmed.nights === 1 ? "night" : "nights"}</dd></div>
+                <div><dt className="eyebrow text-flora-grey">Total stay</dt><dd className="mt-2 font-display text-3xl">{formatMoney(confirmed.totalPrice, confirmed.currency)}</dd></div>
               </dl>
+              <dl className="mt-5 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-lg border border-flora-line bg-flora-cream p-4">
+                  <dt className="eyebrow text-flora-grey text-[0.55rem]">Deposit Paid (25%)</dt>
+                  <dd className="mt-1 font-display text-2xl text-flora-navy">{formatMoney(confirmed.depositAmount, confirmed.currency)}</dd>
+                </div>
+                <div className="rounded-lg border border-dashed border-flora-gold bg-flora-cream p-4">
+                  <dt className="eyebrow text-flora-gold text-[0.55rem]">Balance at Check-in</dt>
+                  <dd className="mt-1 font-display text-2xl text-flora-navy">{formatMoney(confirmed.remainingBalance, confirmed.currency)}</dd>
+                </div>
+                <div className="rounded-lg border border-flora-line bg-flora-cream p-4">
+                  <dt className="eyebrow text-flora-grey text-[0.55rem]">Booking Reference</dt>
+                  <dd className="mt-1 font-mono text-xs font-bold text-flora-slate">{confirmed.bookingId}</dd>
+                </div>
+              </dl>
+              <div className="mt-8">
+                <Link href="/" className="luxury-button inline-block border-flora-navy bg-flora-navy px-8 py-3 text-flora-ivory [--button-fill:var(--flora-slate)] [--button-ink:var(--flora-ivory-card)]">
+                  Return to Flora
+                </Link>
+              </div>
             </section>
+
           ) : selection && start && end ? (
             <form id="guest-details" className="mt-10 grid gap-8 border border-flora-line bg-flora-ivory p-7 shadow-soft sm:p-10 lg:grid-cols-[1.15fr_0.85fr]" onSubmit={submitBooking}>
               <div>
                 <p className="eyebrow text-flora-terracotta">4 · Guest details</p>
-                <h2 className="mt-4 font-display text-[clamp(2.6rem,5vw,4.4rem)] leading-none">Complete your request</h2>
+                <h2 className="mt-4 font-display text-[clamp(2.6rem,5vw,4.4rem)] leading-none">Complete your booking</h2>
                 <div className="mt-8 grid gap-5 sm:grid-cols-2">
                   <label className="block sm:col-span-2"><span className="eyebrow text-flora-grey">Full name</span><input className="field mt-2" name="guest_name" autoComplete="name" required value={guestName} onChange={(event) => setGuestName(event.target.value)} /></label>
                   <label className="block"><span className="eyebrow text-flora-grey">Email</span><input className="field mt-2" name="guest_email" type="email" autoComplete="email" required value={guestEmail} onChange={(event) => setGuestEmail(event.target.value)} /></label>
                   <label className="block"><span className="eyebrow text-flora-grey">Phone</span><input className="field mt-2" name="guest_phone" type="tel" autoComplete="tel" required value={guestPhone} onChange={(event) => setGuestPhone(event.target.value)} /></label>
                 </div>
                 {bookingError ? <p className="mt-5 border-l-2 border-flora-terracotta pl-4 text-sm leading-relaxed text-flora-terracotta" role="alert">{bookingError}</p> : null}
-                <button type="submit" disabled={submitState !== "idle"} className="luxury-button mt-7 border-flora-slate text-flora-slate disabled:cursor-wait disabled:opacity-60 [--button-fill:var(--flora-slate-blue-deep)]">{submitState === "checking" ? "Checking availability…" : submitState === "saving" ? "Saving your request…" : "Send reservation request"}</button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="luxury-button mt-7 w-full border-flora-slate text-flora-slate disabled:cursor-wait disabled:opacity-60 [--button-fill:var(--flora-slate-blue-deep)]"
+                >
+                  {buttonLabel}
+                </button>
+                <p className="mt-3 flex items-center gap-2 font-sans text-[0.6rem] uppercase tracking-wider text-flora-grey">
+                  <span>🔒</span>
+                  <span>256-Bit Encrypted · Secure Razorpay Checkout · 25% Deposit Now</span>
+                </p>
               </div>
               <aside className="border border-flora-line bg-flora-cream p-6">
                 <p className="eyebrow text-flora-gold">Your selection</p>
@@ -481,7 +642,13 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
                   <div className="flex justify-between gap-4"><dt className="text-flora-grey">Guests</dt><dd>{adults + children}</dd></div>
                   <div className="flex justify-between gap-4"><dt className="text-flora-grey">Nights</dt><dd>{stayNights}</dd></div>
                 </dl>
-                <div className="mt-5 flex items-end justify-between gap-4"><span className="eyebrow text-flora-grey">Estimated total</span><strong className="font-display text-4xl font-normal">{formatMoney(selectionTotal, selection.rate.currency)}</strong></div>
+                <div className="mt-5 space-y-2">
+                  <div className="flex items-end justify-between gap-4"><span className="eyebrow text-flora-grey">Total stay</span><strong className="font-display text-4xl font-normal">{formatMoney(selectionTotal, selection.rate.currency)}</strong></div>
+                  <div className="flex items-end justify-between gap-4 border-t border-dashed border-flora-gold pt-2">
+                    <span className="eyebrow text-flora-gold text-[0.55rem]">Deposit due now (25%)</span>
+                    <strong className="font-display text-2xl font-normal text-flora-navy">{formatMoney(Math.round(selectionTotal * 0.25 * 100) / 100, selection.rate.currency)}</strong>
+                  </div>
+                </div>
               </aside>
             </form>
           ) : null}

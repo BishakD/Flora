@@ -277,7 +277,8 @@ async function sendEmail({
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * 1. "BOOKING RECEIVED" email — sent when guest submits reservation request.
+ * 1. "BOOKING RECEIVED" email — sent when guest submits a reservation request.
+ * @deprecated No longer called in the direct checkout flow. Kept for legacy compatibility.
  */
 export async function sendBookingReceivedEmail(
   data: BookingEmailData,
@@ -306,87 +307,11 @@ export async function sendBookingReceivedEmail(
 }
 
 /**
- * 2. "BOOKING CONFIRMED" email — sent when admin confirms booking, with deposit payment button.
+ * 2. "BOOKING CONFIRMED" email — sent exactly once, immediately after deposit payment is captured.
+ *    Includes: booking reference, payment reference, room, dates, total, deposit paid, balance at check-in.
+ *    This is the ONLY confirmation email in the direct guest checkout flow.
  */
 export async function sendBookingConfirmedEmail(
-  data: BookingEmailData,
-): Promise<{ success: boolean; id?: string; error?: string }> {
-  const deposit = data.depositAmount ?? Math.round(data.totalPrice * 0.25 * 100) / 100;
-  const balance = data.remainingBalance ?? Math.max(0, data.totalPrice - deposit);
-
-  const formattedTotal = formatMoney(data.totalPrice, data.currency);
-  const formattedDeposit = formatMoney(deposit, data.currency);
-  const formattedBalance = formatMoney(balance, data.currency);
-
-  const detailsHtml = `
-    ${buildCommonDetailsRows(data)}
-    <tr>
-      <td style="padding:8px 0 4px 0;border-top:1px solid #dcd3c4;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;">Total Price</td>
-      <td style="padding:8px 0 4px 0;border-top:1px solid #dcd3c4;font-family:Georgia,serif;font-size:16px;color:#1b2a3f;" align="right">${formattedTotal}</td>
-    </tr>
-    <tr>
-      <td style="padding:4px 0;font-family:Arial,sans-serif;font-size:12px;color:#c6a15b;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Deposit Due (25%)</td>
-      <td style="padding:4px 0;font-family:Georgia,serif;font-size:16px;color:#c6a15b;font-weight:bold;" align="right">${formattedDeposit}</td>
-    </tr>
-    <tr>
-      <td style="padding:4px 0 8px 0;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;">Remaining Balance</td>
-      <td style="padding:4px 0 8px 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;" align="right">${formattedBalance} (at hotel)</td>
-    </tr>`;
-
-  const defaultBaseUrl = (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-    "http://localhost:3000"
-  ).replace(/\/+$/, "");
-
-  const payUrl = data.paymentUrl || `${defaultBaseUrl}/pay/${data.bookingId}`;
-
-  const callToActionHtml = `
-    <div style="margin:28px 0;text-align:center;background-color:#f6f1e7;border:1px solid #dcd3c4;padding:24px;border-radius:4px;">
-      <p style="margin:0 0 8px 0;font-family:Arial,sans-serif;font-size:12px;color:#1b2a3f;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;">
-        Deposit due now: ${formattedDeposit}
-      </p>
-      <p style="margin:0 0 18px 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;">
-        Remaining balance payable at the hotel: ${formattedBalance}
-      </p>
-      <table width="100%" border="0" cellspacing="0" cellpadding="0">
-        <tr>
-          <td align="center">
-            <a href="${payUrl}" target="_blank" style="display:inline-block;padding:14px 32px;background-color:#1b2a3f;color:#fdfbf6;font-family:Arial,sans-serif;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;border-radius:30px;box-shadow:0 4px 12px rgba(27,42,63,0.25);">
-              Pay Deposit · ${formattedDeposit}
-            </a>
-          </td>
-        </tr>
-      </table>
-    </div>`;
-
-  const afterNoteHtml = `
-    <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;line-height:1.6;">
-      <strong>Arrival Information:</strong> Check-in commences from 3:00 PM and check-out is at 11:00 AM. Should you require private chauffeur transfer from Firenze Santa Maria Novella station or Amerigo Vespucci Airport, our concierge will be delighted to coordinate your arrival.
-    </p>`;
-
-  const html = emailWrapper({
-    headline: "Your stay is confirmed",
-    statusBadge: `<span style="display:inline-block;padding:4px 12px;background-color:#d4d9d1;color:#1b2a3f;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:20px;border:1px solid #c0c7bc;">Confirmed · Awaiting Deposit</span>`,
-    messageIntro: `Dear ${data.guestName},<br><br>We are delighted to confirm your reservation at Flora Palazzo. To secure your dates, please complete your 25% deposit payment using the secure link below.`,
-    detailsHtml,
-    callToActionHtml,
-    afterNoteHtml,
-  });
-
-  return sendEmail({
-    to: data.guestEmail,
-    subject: `Reservation Confirmed · Flora Palazzo (${data.roomName})`,
-    html,
-  });
-}
-
-/**
- * 3. "PAYMENT RECEIVED" email — sent when deposit payment is successfully captured.
- */
-export async function sendPaymentReceivedEmail(
   data: BookingEmailData,
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   const deposit = data.depositAmount ?? Math.round(data.totalPrice * 0.25 * 100) / 100;
@@ -411,7 +336,7 @@ export async function sendPaymentReceivedEmail(
       <td style="padding:8px 0 4px 0;border-top:1px solid #dcd3c4;font-family:Georgia,serif;font-size:15px;color:#1b2a3f;" align="right">${formattedTotal}</td>
     </tr>
     <tr>
-      <td style="padding:4px 0;font-family:Arial,sans-serif;font-size:12px;color:#3f5064;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Deposit Paid</td>
+      <td style="padding:4px 0;font-family:Arial,sans-serif;font-size:12px;color:#3f5064;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Deposit Paid (25%)</td>
       <td style="padding:4px 0;font-family:Georgia,serif;font-size:16px;color:#1b2a3f;font-weight:bold;" align="right">${formattedDeposit}</td>
     </tr>
     <tr>
@@ -426,22 +351,32 @@ export async function sendPaymentReceivedEmail(
       </p>
     </div>
     <p style="margin:0 0 16px 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;line-height:1.6;">
-      Check-in begins at 3:00 PM. If you anticipate arriving early or require late check-in arrangements, please let us know so we may prepare your suite accordingly.
+      <strong>Arrival Information:</strong> Check-in commences from 3:00 PM and check-out is at 11:00 AM. Should you require private chauffeur transfer from Firenze Santa Maria Novella station or Amerigo Vespucci Airport, our concierge will be delighted to coordinate your arrival.
     </p>`;
 
   const html = emailWrapper({
-    headline: "Deposit payment received",
-    statusBadge: `<span style="display:inline-block;padding:4px 12px;background-color:#d4d9d1;color:#1b2a3f;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:20px;border:1px solid #c0c7bc;">Deposit Paid · Confirmed</span>`,
-    messageIntro: `Dear ${data.guestName},<br><br>Thank you. We have received your deposit payment of ${formattedDeposit} for your upcoming stay at Flora Palazzo. Your reservation is fully secured.`,
+    headline: "Your reservation is confirmed",
+    statusBadge: `<span style="display:inline-block;padding:4px 12px;background-color:#d4d9d1;color:#1b2a3f;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:20px;border:1px solid #c0c7bc;">Confirmed · Deposit Paid</span>`,
+    messageIntro: `Dear ${data.guestName},<br><br>Thank you. Your reservation at Flora Palazzo is confirmed and your 25% deposit of ${formattedDeposit} has been received. We look forward to welcoming you to Florence.`,
     detailsHtml,
     afterNoteHtml,
   });
 
   return sendEmail({
     to: data.guestEmail,
-    subject: `Deposit Payment Received · Flora Palazzo (${data.roomName})`,
+    subject: `Reservation Confirmed · Flora Palazzo (${data.roomName})`,
     html,
   });
+}
+
+/**
+ * 3. "PAYMENT RECEIVED" email.
+ * @deprecated Delegates to sendBookingConfirmedEmail. Kept so existing call-sites compile cleanly.
+ */
+export async function sendPaymentReceivedEmail(
+  data: BookingEmailData,
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  return sendBookingConfirmedEmail(data);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { verifyRazorpayPaymentSignature } from "@/lib/razorpay";
-import { sendPaymentReceivedEmail } from "@/lib/email";
+import { verifyRazorpayPaymentSignature, createRazorpayRefund } from "@/lib/razorpay";
+import { sendBookingConfirmedEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Verify signature
+    // 1. Verify HMAC signature — must pass before we touch the database
     const isValid = verifyRazorpayPaymentSignature({
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
@@ -35,7 +35,95 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Update payment status safely using security-definer RPC
+    // 2. Fetch current booking state to get dates + room for re-check
+    const { data: bookingData, error: fetchError } = await supabase.rpc(
+      "get_booking_for_payment",
+      { p_booking_id: bookingId },
+    );
+
+    if (fetchError || !bookingData) {
+      console.error("[Razorpay Verify] Booking not found:", bookingId, fetchError);
+      return NextResponse.json(
+        { error: "Booking not found" },
+        { status: 404 },
+      );
+    }
+
+    // 3. Idempotency — if already marked deposit_paid, return success immediately
+    if (bookingData.payment_status === "deposit_paid") {
+      console.log(`[Razorpay Verify] Booking ${bookingId} already marked deposit_paid — idempotent`);
+      return NextResponse.json({ success: true, payment_status: "deposit_paid" });
+    }
+
+    // 4. Race-condition availability re-check
+    //    If another booking was confirmed in the window between order creation and payment capture,
+    //    we must refund this payment rather than double-confirming the room.
+
+    // Fetch room_type_id directly from bookings table (not exposed by get_booking_for_payment RPC)
+    let roomTypeId: string | null = null;
+    {
+      const { data: rawBooking } = await supabase
+        .from("bookings")
+        .select("room_type_id")
+        .eq("id", bookingId)
+        .maybeSingle();
+      roomTypeId = rawBooking?.room_type_id ?? null;
+    }
+
+    if (roomTypeId) {
+      const { data: finalAvail, error: finalAvailError } = await supabase.rpc(
+        "check_room_availability",
+        {
+          p_room_type_id: roomTypeId,
+          p_check_in: bookingData.check_in,
+          p_check_out: bookingData.check_out,
+        },
+      );
+
+      if (!finalAvailError && finalAvail === false) {
+        // Room is now taken — auto-refund and cancel this booking
+        console.warn(`[Razorpay Verify] Race condition — room no longer available for booking ${bookingId}. Initiating refund.`);
+
+        const depositAmount = Number(bookingData.deposit_amount) || Math.round(Number(bookingData.total_price) * 0.25 * 100) / 100;
+        const refundInPaise = Math.round(depositAmount * 100);
+
+        try {
+          await createRazorpayRefund({
+            paymentId: razorpay_payment_id,
+            amountInPaise: refundInPaise,
+            notes: {
+              booking_id: bookingId,
+              reason: "Room unavailable at payment time — automatic refund",
+            },
+          });
+          console.log(`[Razorpay Verify] Auto-refund issued for booking ${bookingId}`);
+        } catch (refundErr: any) {
+          console.error("[Razorpay Verify] Auto-refund failed:", refundErr?.message);
+        }
+
+        // Mark booking as cancelled + refunded
+        await supabase
+          .from("bookings")
+          .update({
+            status: "cancelled",
+            payment_status: "refunded",
+            razorpay_payment_id,
+          } as any)
+          .eq("id", bookingId);
+
+        return NextResponse.json(
+          {
+            success: false,
+            roomUnavailable: true,
+            error:
+              "Unfortunately this room was just booked by another guest. Your payment has been automatically refunded and will appear in your account within 5–7 business days.",
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    // 5. All clear — mark deposit_paid via security-definer RPC
     const { data: booking, error: updateError } = await supabase.rpc(
       "record_deposit_paid",
       {
@@ -52,7 +140,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Send "Payment Received" email
+    // 6. Send the single "Booking Confirmed" email — only triggered here, never before payment
     const roomName = booking.room_types?.name || "Flora Room";
     const rateName = booking.rate_plans?.name || "Standard Rate";
     const currency = booking.rate_plans?.currency || "INR";
@@ -61,7 +149,7 @@ export async function POST(request: Request) {
     const remainingBalance = Math.max(0, Math.round((totalPrice - depositAmount) * 100) / 100);
 
     try {
-      await sendPaymentReceivedEmail({
+      await sendBookingConfirmedEmail({
         bookingId,
         guestName: booking.guest_name,
         guestEmail: booking.guest_email,
@@ -72,13 +160,14 @@ export async function POST(request: Request) {
         adults: booking.adults,
         children: booking.children,
         totalPrice,
+        currency,
         depositAmount,
         remainingBalance,
-        currency,
         razorpayPaymentId: razorpay_payment_id,
       });
     } catch (emailErr) {
-      console.error("[Razorpay Verify] Failed to send Payment Received email:", emailErr);
+      console.error("[Razorpay Verify] Failed to send Booking Confirmed email:", emailErr);
+      // Non-fatal — payment is already captured and DB is updated
     }
 
     return NextResponse.json({ success: true, payment_status: "deposit_paid" });

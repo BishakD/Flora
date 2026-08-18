@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sendBookingReceivedEmail } from "@/lib/email";
 import type { BookingCreate } from "@/types/database";
 
 export async function POST(request: Request) {
@@ -96,36 +95,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Send "BOOKING RECEIVED" email asynchronously (do NOT fail booking on email error)
     const roomName = roomData?.name || "Flora Suite";
     const rateName = rateData?.name || "Standard Rate";
     const currency = rateData?.currency || "INR";
-    const bookingRef = `FLORA-${Date.now().toString(36).toUpperCase()}`;
-
-    try {
-      await sendBookingReceivedEmail({
-        bookingId: bookingRef,
-        guestName: guest_name.trim(),
-        guestEmail: guest_email.trim(),
-        roomName,
-        rateName,
-        checkIn: check_in,
-        checkOut: check_out,
-        adults,
-        children,
-        totalPrice: total_price,
-        currency,
-      });
-    } catch (emailErr) {
-      console.error("[Booking API] Failed to send received email:", emailErr);
-      // Non-fatal: continue and return success
-    }
 
     return NextResponse.json(
       {
         success: true,
         booking: {
-          id: bookingRef,
           guestName: guest_name.trim(),
           roomName,
           rateName,

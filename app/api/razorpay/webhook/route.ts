@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { verifyRazorpayWebhookSignature } from "@/lib/razorpay";
-import { sendPaymentReceivedEmail } from "@/lib/email";
+import { sendBookingConfirmedEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       const remainingBalance = Math.max(0, Math.round((totalPrice - depositAmount) * 100) / 100);
 
       try {
-        await sendPaymentReceivedEmail({
+        await sendBookingConfirmedEmail({
           bookingId: booking.id,
           guestName: booking.guest_name,
           guestEmail: booking.guest_email,
@@ -100,14 +100,14 @@ export async function POST(request: Request) {
           adults: booking.adults,
           children: booking.children,
           totalPrice,
+          currency,
           depositAmount,
           remainingBalance,
-          currency,
           razorpayPaymentId: paymentId,
         });
-        console.log(`[Razorpay Webhook] Sent Payment Received email for booking ${booking.id}`);
+        console.log(`[Razorpay Webhook] Sent Booking Confirmed email for booking ${booking.id}`);
       } catch (emailErr) {
-        console.error("[Razorpay Webhook] Failed to send payment email:", emailErr);
+        console.error("[Razorpay Webhook] Failed to send booking confirmed email:", emailErr);
       }
 
       return NextResponse.json({ status: "success", booking_id: booking.id });
