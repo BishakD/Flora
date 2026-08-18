@@ -494,6 +494,7 @@ export default function AdminDashboardPage() {
                   {[
                     "Guest Name",
                     "Contact Details",
+                    "Guests",
                     "Dates",
                     "Room",
                     "Booking Reference",
@@ -539,19 +540,27 @@ export default function AdminDashboardPage() {
                         <div className="text-flora-grey font-mono text-[0.72rem]">{b.guest_phone}</div>
                       </td>
 
-                      {/* 3. Check-in / Check-out Dates */}
+                      {/* 3. Guests (No. of Adults & Children) */}
+                      <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
+                        <span>{b.adults} {b.adults === 1 ? "Adult" : "Adults"}</span>
+                        {b.children > 0 ? (
+                          <span className="text-flora-grey ml-1">· {b.children} {b.children === 1 ? "Child" : "Children"}</span>
+                        ) : null}
+                      </td>
+
+                      {/* 4. Check-in / Check-out Dates */}
                       <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
                         <span>{fmtDate(b.check_in)}</span>
                         <span className="text-flora-grey mx-1.5">→</span>
                         <span>{fmtDate(b.check_out)}</span>
                       </td>
 
-                      {/* 4. Room Name */}
+                      {/* 5. Room Name */}
                       <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
                         {b.room_types?.name ?? "Flora Room"}
                       </td>
 
-                      {/* 5. Booking Reference */}
+                      {/* 6. Booking Reference */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="font-mono text-xs text-flora-slate" title={b.id}>
                           {b.id}
