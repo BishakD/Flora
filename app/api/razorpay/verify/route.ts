@@ -56,10 +56,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Race-condition availability re-check
-    //    If another booking was confirmed in the window between order creation and payment capture,
-    //    we must refund this payment rather than double-confirming the room.
-
-    // Fetch room_type_id directly from bookings table (not exposed by get_booking_for_payment RPC)
+    //    Verify no OTHER booking (excluding this one) was paid & confirmed for these dates
     let roomTypeId: string | null = null;
     {
       const { data: rawBooking } = await supabase
@@ -71,18 +68,20 @@ export async function POST(request: Request) {
     }
 
     if (roomTypeId) {
-      const { data: finalAvail, error: finalAvailError } = await supabase.rpc(
-        "check_room_availability",
-        {
-          p_room_type_id: roomTypeId,
-          p_check_in: bookingData.check_in,
-          p_check_out: bookingData.check_out,
-        },
-      );
+      const { data: conflicts, error: conflictError } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("room_type_id", roomTypeId)
+        .neq("id", bookingId)
+        .eq("status", "confirmed")
+        .eq("payment_status", "deposit_paid")
+        .lt("check_in", bookingData.check_out)
+        .gt("check_out", bookingData.check_in)
+        .limit(1);
 
-      if (!finalAvailError && finalAvail === false) {
-        // Room is now taken — auto-refund and cancel this booking
-        console.warn(`[Razorpay Verify] Race condition — room no longer available for booking ${bookingId}. Initiating refund.`);
+      if (!conflictError && conflicts && conflicts.length > 0) {
+        // Room is truly taken by another paid booking — auto-refund and cancel this booking
+        console.warn(`[Razorpay Verify] Race condition — room booked by another guest for booking ${bookingId}. Initiating refund.`);
 
         const depositAmount = Number(bookingData.deposit_amount) || Math.round(Number(bookingData.total_price) * 0.25 * 100) / 100;
         const refundInPaise = Math.round(depositAmount * 100);
