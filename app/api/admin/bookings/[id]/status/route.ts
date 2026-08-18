@@ -68,6 +68,7 @@ export async function POST(
       const roomName = booking.room_types?.name || "Flora Room";
       const rateName = booking.rate_plans?.name || "Standard Rate";
       const currency = booking.rate_plans?.currency || "INR";
+      const bookingReference = (booking as any).booking_reference as string | null;
 
       let newPaymentStatus: string = paymentStatus || "unpaid";
       let refundId: string | undefined;
@@ -130,6 +131,7 @@ export async function POST(
       try {
         await sendBookingCancelledEmail({
           bookingId: id,
+          bookingReference,
           guestName: booking.guest_name,
           guestEmail: booking.guest_email,
           roomName,

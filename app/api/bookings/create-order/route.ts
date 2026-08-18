@@ -68,6 +68,7 @@ export async function POST(request: Request) {
     const depositInPaise = Math.round(depositAmount * 100);
 
     let bookingId: string | null = null;
+    let bookingReference: string | null = null;
 
     // 4. Try Security-Definer RPC 'create_guest_booking' first (bypasses RLS SELECT restrictions)
     const { data: rpcData, error: rpcError } = await supabase.rpc("create_guest_booking", {
@@ -86,7 +87,8 @@ export async function POST(request: Request) {
 
     if (!rpcError && rpcData?.id) {
       bookingId = rpcData.id as string;
-      console.log(`[CreateOrder] Booking created via RPC: ${bookingId}`);
+      bookingReference = (rpcData.booking_reference as string) ?? null;
+      console.log(`[CreateOrder] Booking created via RPC: ${bookingId} ref: ${bookingReference}`);
     } else {
       if (rpcError) {
         console.warn("[CreateOrder] RPC create_guest_booking not available or failed:", rpcError.message);
@@ -111,7 +113,7 @@ export async function POST(request: Request) {
           status: "confirmed",
           payment_status: "awaiting_payment",
         })
-        .select("id")
+        .select("id, booking_reference")
         .single();
 
       if (insertError || !insertedRows?.id) {
@@ -128,6 +130,7 @@ export async function POST(request: Request) {
       }
 
       bookingId = insertedRows.id as string;
+      bookingReference = (insertedRows as any).booking_reference as string | null;
     }
 
     if (!bookingId) {
@@ -177,6 +180,7 @@ export async function POST(request: Request) {
       {
         success: true,
         bookingId,
+        bookingReference,
         razorpayOrderId,
         depositAmount,
         depositInPaise,

@@ -58,13 +58,15 @@ export async function POST(request: Request) {
     // 4. Race-condition availability re-check
     //    Verify no OTHER booking (excluding this one) was paid & confirmed for these dates
     let roomTypeId: string | null = null;
+    let bookingReference: string | null = null;
     {
       const { data: rawBooking } = await supabase
         .from("bookings")
-        .select("room_type_id")
+        .select("room_type_id, booking_reference")
         .eq("id", bookingId)
         .maybeSingle();
       roomTypeId = rawBooking?.room_type_id ?? null;
+      bookingReference = (rawBooking as any)?.booking_reference ?? null;
     }
 
     if (roomTypeId) {
@@ -150,6 +152,7 @@ export async function POST(request: Request) {
     try {
       await sendBookingConfirmedEmail({
         bookingId,
+        bookingReference,
         guestName: booking.guest_name,
         guestEmail: booking.guest_email,
         roomName,

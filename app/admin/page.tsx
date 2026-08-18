@@ -202,6 +202,7 @@ export default function AdminDashboardPage() {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [fetchError, setFetchError] = useState<SupabaseError | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Actions & Modals
   const [cancelTarget, setCancelTarget] = useState<BookingRow | null>(null);
@@ -431,6 +432,15 @@ export default function AdminDashboardPage() {
 
   // ── Minimal Dashboard View ─────────────────────────────────────────────────
 
+  const trimmedQuery = searchQuery.trim().toUpperCase();
+  const filteredBookings = trimmedQuery
+    ? bookings.filter((b) =>
+        ((b as any).booking_reference as string | null)
+          ?.toUpperCase()
+          .includes(trimmedQuery)
+      )
+    : bookings;
+
   return (
     <>
       {cancelTarget && (
@@ -452,16 +462,39 @@ export default function AdminDashboardPage() {
       )}
 
       <AdminShell title="Bookings">
-        {/* Header Bar with Live Indicator & Refresh */}
+        {/* Header Bar with Search, Live Indicator & Refresh */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-flora-sage opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-flora-sage" />
-            </span>
-            <span className="font-sans text-[0.68rem] tracking-wider uppercase text-flora-grey">
-              Auto-refreshing · Live
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-flora-sage opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-flora-sage" />
+              </span>
+              <span className="font-sans text-[0.68rem] tracking-wider uppercase text-flora-grey">
+                Auto-refreshing · Live
+              </span>
+            </div>
+            {/* Search by booking reference */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search by reference…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                maxLength={6}
+                className="rounded border border-flora-line bg-flora-cream px-3 py-1.5 font-mono text-[0.75rem] uppercase tracking-widest text-flora-navy placeholder:normal-case placeholder:tracking-normal placeholder:font-sans placeholder:text-flora-grey/70 focus:border-flora-navy focus:outline-none w-44"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-flora-grey hover:text-flora-navy text-xs"
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -479,12 +512,23 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {bookings.length === 0 ? (
+        {filteredBookings.length === 0 ? (
           <div className="rounded-lg border border-flora-line bg-flora-ivory p-16 text-center shadow-soft">
-            <p className="font-display text-2xl text-flora-navy">No reservations yet</p>
-            <p className="mt-2 font-sans text-sm text-flora-grey">
-              New bookings will automatically appear here in real time.
-            </p>
+            {bookings.length === 0 ? (
+              <>
+                <p className="font-display text-2xl text-flora-navy">No reservations yet</p>
+                <p className="mt-2 font-sans text-sm text-flora-grey">
+                  New bookings will automatically appear here in real time.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-2xl text-flora-navy">No results</p>
+                <p className="mt-2 font-sans text-sm text-flora-grey">
+                  No booking found with reference <span className="font-mono font-bold">{searchQuery.toUpperCase()}</span>.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-flora-line bg-flora-ivory shadow-soft">
@@ -512,7 +556,7 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-flora-line/60">
-                {bookings.map((b, i) => {
+                {filteredBookings.map((b, i) => {
                   const currency = b.rate_plans?.currency || "INR";
                   const depositPaidAmount =
                     typeof b.deposit_amount === "number" && b.deposit_amount > 0
@@ -562,8 +606,11 @@ export default function AdminDashboardPage() {
 
                       {/* 6. Booking Reference */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="font-mono text-xs text-flora-slate" title={b.id}>
-                          {b.id}
+                        <span
+                          className="font-mono text-base font-bold tracking-widest text-flora-navy"
+                          title={b.id}
+                        >
+                          {(b as any).booking_reference ?? b.id.toUpperCase().slice(0, 6)}
                         </span>
                       </td>
 
@@ -620,7 +667,11 @@ export default function AdminDashboardPage() {
 
         {/* Footer info */}
         <div className="mt-4 flex items-center justify-between font-sans text-[0.7rem] text-flora-grey">
-          <span>{bookings.length} reservation{bookings.length !== 1 ? "s" : ""} total</span>
+          <span>
+            {trimmedQuery
+              ? `${filteredBookings.length} of ${bookings.length} reservation${bookings.length !== 1 ? "s" : ""}`
+              : `${bookings.length} reservation${bookings.length !== 1 ? "s" : ""} total`}
+          </span>
           <span>Flora Palazzo Hotel Admin</span>
         </div>
       </AdminShell>

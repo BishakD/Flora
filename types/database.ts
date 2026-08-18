@@ -47,6 +47,7 @@ export interface Booking {
   payment_status?: PaymentStatus | null;
   razorpay_order_id?: string | null;
   razorpay_payment_id?: string | null;
+  booking_reference?: string | null;
   status: BookingStatus;
   created_at: ISODateTime;
 }
@@ -137,6 +138,7 @@ export interface Database {
         Returns: {
           id: string;
           deposit_amount: number;
+          booking_reference: string;
         } | null;
       };
       check_room_availability: {

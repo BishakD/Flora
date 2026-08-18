@@ -19,6 +19,7 @@ type Selection = {
 // Booking confirmed screen data
 type BookingConfirmed = {
   bookingId: string;
+  bookingReference: string | null;
   guestName: string;
   guestEmail: string;
   roomName: string;
@@ -322,6 +323,7 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
     let bookingId: string;
     let razorpayOrderId: string;
     let depositAmount: number;
+    let bookingRef: string | null = null;
 
     try {
       const res = await fetch("/api/bookings/create-order", {
@@ -353,6 +355,7 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
       bookingId = data.bookingId as string;
       razorpayOrderId = data.razorpayOrderId as string;
       depositAmount = data.depositAmount as number;
+      bookingRef = (data.bookingReference as string) ?? null;
     } catch (err) {
       console.error("[BookingFlow] create-order network error:", err);
       setSubmitState("idle");
@@ -432,6 +435,7 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
           // Success — show confirmation screen
           setConfirmed({
             bookingId,
+            bookingReference: bookingRef,
             guestName: guestName.trim(),
             guestEmail: guestEmail.trim(),
             roomName,
@@ -599,7 +603,9 @@ export function BookingFlow({ rooms, initialAdults = 2, initialChildren = 0, ini
                 </div>
                 <div className="rounded-lg border border-flora-line bg-flora-cream p-4">
                   <dt className="eyebrow text-flora-grey text-[0.55rem]">Booking Reference</dt>
-                  <dd className="mt-1 font-mono text-xs font-bold text-flora-slate">{confirmed.bookingId}</dd>
+                  <dd className="mt-1 font-mono text-xl font-bold tracking-widest text-flora-navy">
+                    {confirmed.bookingReference ?? confirmed.bookingId.toUpperCase().slice(0, 6)}
+                  </dd>
                 </div>
               </dl>
               <div className="mt-8">

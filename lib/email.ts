@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 
 export interface BookingEmailData {
   bookingId: string;
+  bookingReference?: string | null;
   guestName: string;
   guestEmail: string;
   roomName: string;
@@ -160,8 +161,8 @@ function buildCommonDetailsRows(data: BookingEmailData): string {
 
   return `
     <tr>
-      <td style="padding:6px 0;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;" width="40%">Reference</td>
-      <td style="padding:6px 0;font-family:Georgia,serif;font-size:14px;color:#1b2a3f;font-weight:bold;" align="right">${data.bookingId}</td>
+      <td style="padding:6px 0;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;" width="40%">Booking Reference</td>
+      <td style="padding:6px 0;font-family:Georgia,serif;font-size:20px;color:#1b2a3f;font-weight:bold;letter-spacing:0.15em;" align="right">${data.bookingReference || data.bookingId.toUpperCase().slice(0, 6)}</td>
     </tr>
     <tr>
       <td style="padding:6px 0;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;">Guest Name</td>
