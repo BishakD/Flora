@@ -470,10 +470,7 @@ export async function sendStaffWelcomeEmail(data: {
   staffName: string;
   role: "admin" | "reception";
 }) {
-  const loginUrl =
-    data.role === "admin"
-      ? "https://flora.ferenc.com/admin/login"
-      : "https://flora.ferenc.com/reception/login";
+  const loginUrl = "https://flora.ferenc.com/staff/login";
 
   const detailsHtml = `
     <tr>

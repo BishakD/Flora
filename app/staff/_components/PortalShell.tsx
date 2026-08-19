@@ -1,25 +1,25 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-interface ReceptionShellProps {
+interface PortalShellProps {
+  /** Page heading shown in the top bar */
   title: string;
+  /** Optional eyebrow above the heading */
   eyebrow?: string;
   children: React.ReactNode;
 }
 
 /**
- * Shared chrome for the /reception page:
- *  - Sticky top bar with wordmark, page title, and log-out button
- *  - Main content area
+ * Shared chrome for portal pages (the Lobby).
+ * Minimal layout with wordmark, title, and log-out button.
  */
-export function ReceptionShell({
+export function PortalShell({
   title,
   eyebrow = "Flora · Firenze",
   children,
-}: ReceptionShellProps) {
+}: PortalShellProps) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -29,32 +29,23 @@ export function ReceptionShell({
 
   return (
     <div className="min-h-screen bg-flora-cream pt-[var(--nav-height)]">
-      {/* ── Top bar ─────────────────────────────────────────────────────── */}
+      {/* ── Top bar ────────────────────────────────────────────────────── */}
       <header className="sticky top-[var(--nav-height)] z-10 border-b border-flora-line bg-flora-ivory/95 backdrop-blur-sm">
         <div className="mx-auto max-w-[1440px] px-6">
-          {/* Row 1: wordmark + log-out */}
-          <div className="flex items-center justify-between gap-4 py-3">
+          <div className="flex items-center justify-between gap-4 py-4">
             <div>
               <p className="eyebrow text-flora-gold">{eyebrow}</p>
               <h1 className="display-title text-[1.45rem] text-flora-navy leading-tight">
                 {title}
               </h1>
             </div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/staff"
-                className="font-sans text-[0.62rem] uppercase tracking-[0.14em] text-flora-grey hover:text-flora-navy transition-colors"
-              >
-                ← Portal
-              </Link>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="luxury-button border-flora-line text-flora-grey hover:border-flora-navy [--button-fill:var(--flora-navy)] [--button-ink:var(--flora-ivory-card)]"
-              >
-                Log out
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="luxury-button border-flora-line text-flora-grey hover:border-flora-navy [--button-fill:var(--flora-navy)] [--button-ink:var(--flora-ivory-card)]"
+            >
+              Log out
+            </button>
           </div>
         </div>
       </header>
