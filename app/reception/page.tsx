@@ -637,7 +637,7 @@ export default function ReceptionDashboardPage() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-flora-line/60 bg-[url('/blue-gradient.png')] bg-cover bg-center">
+              <tbody className="divide-y divide-flora-line/60">
                 {filteredBookings.map((b, i) => {
                   const currency = b.rate_plans?.currency || "INR";
                   const depositPaidAmount =
@@ -653,7 +653,9 @@ export default function ReceptionDashboardPage() {
                   return (
                     <tr
                       key={b.id}
-                      className="transition-colors duration-150 hover:bg-white/30"
+                      className={`transition-colors duration-150 hover:bg-flora-cream/40 ${
+                        i % 2 === 0 ? "bg-flora-ivory" : "bg-flora-cream/20"
+                      }`}
                     >
                       {/* 1. Booked On (Date & Time) */}
                       <td className="px-4 py-3 whitespace-nowrap">
