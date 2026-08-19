@@ -29,7 +29,7 @@ AS $$
   );
 $$;
 
--- 4. Clean up any existing recursive policies
+-- 4. Drop any previous policies
 DROP POLICY IF EXISTS "Admins can read staff" ON public.staff;
 DROP POLICY IF EXISTS "Admins can insert staff" ON public.staff;
 DROP POLICY IF EXISTS "Admins can update staff" ON public.staff;
@@ -39,8 +39,6 @@ DROP POLICY IF EXISTS "Staff and admins read policy" ON public.staff;
 DROP POLICY IF EXISTS "Admin write policy" ON public.staff;
 
 -- 5. Non-recursive Select Policy:
--- Any logged-in user can read their own row (needed for role checks),
--- or admins can read all rows (via security definer function).
 CREATE POLICY "Staff and admins read policy"
   ON public.staff
   FOR SELECT
@@ -48,7 +46,7 @@ CREATE POLICY "Staff and admins read policy"
     id = auth.uid() OR public.is_admin()
   );
 
--- 6. Non-recursive Modify Policy: Only admins can insert/update/delete directly
+-- 6. Non-recursive Modify Policy:
 CREATE POLICY "Admin write policy"
   ON public.staff
   FOR ALL
@@ -59,15 +57,9 @@ CREATE POLICY "Admin write policy"
     public.is_admin()
   );
 
--- ============================================================
--- IMPORTANT: Make sure your admin user is registered in the
--- staff table. Replace with your actual UUID & email:
--- ============================================================
-
--- INSERT INTO public.staff (id, email, role)
--- VALUES (
---   'YOUR-ADMIN-USER-UUID-HERE',
---   'your-admin@email.com',
---   'admin'
--- )
--- ON CONFLICT (id) DO UPDATE SET role = 'admin';
+-- 7. Automatically insert your admin account from auth.users (no manual UUID copy-pasting needed):
+INSERT INTO public.staff (id, email, role)
+SELECT id, email, 'admin'
+FROM auth.users
+WHERE lower(email) = 'bishakdebb@gmail.com'
+ON CONFLICT (id) DO UPDATE SET role = 'admin';
