@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Booking, BookingStatus } from "@/types/database";
 import { AdminShell } from "@/app/admin/_components/AdminShell";
+import { useAdminSession } from "@/app/admin/_lib/useAdminSession";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -198,7 +198,8 @@ function DeleteBookingModal({
 // ─── Main Admin Dashboard Component ───────────────────────────────────────────
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
+  useAdminSession(); // ← auth guard; handles redirect to login or /reception
+
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [fetchError, setFetchError] = useState<SupabaseError | null>(null);
@@ -221,16 +222,6 @@ export default function AdminDashboardPage() {
       isFetchingRef.current = true;
 
       if (isInitial) setLoadState("loading");
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.replace("/admin/login");
-        isFetchingRef.current = false;
-        return;
-      }
 
       const { data, error } = await supabase
         .from("bookings")
@@ -256,13 +247,14 @@ export default function AdminDashboardPage() {
         if (isInitial) setLoadState("ready");
       }
     },
-    [router],
+    [],
   );
 
   // Initial load
   useEffect(() => {
     fetchBookings(true);
   }, [fetchBookings]);
+
 
   // ── Auto-refresh: Polling every 20 seconds ─────────────────────────────────
   useEffect(() => {

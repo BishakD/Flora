@@ -5,49 +5,51 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 /**
- * Runs a session check on mount:
- *  - No session            → /admin/login
- *  - Role is 'reception'   → /reception  (has a portal but not admin)
- *  - Role is 'admin'       → allowed
- *  - No staff row / error  → allowed (graceful fallback — staff table may not
- *                            be set up yet, or this is the bootstrapping admin)
+ * Guards every /admin/* page. Uses onAuthStateChange so we wait for Supabase
+ * to fully restore the session from localStorage before deciding — this avoids
+ * false "no session" redirects that happen when getSession() is called too
+ * early on component mount (especially during client-side navigation).
  *
- * Call this at the top of every admin page component.
+ * Behaviour:
+ *  - INITIAL_SESSION / SIGNED_IN with no session → /admin/login
+ *  - Role is 'reception'                         → /reception
+ *  - Role is 'admin' OR no staff row yet         → allowed
+ *  - SIGNED_OUT                                  → /admin/login
  */
 export function useAdminSession() {
   const router = useRouter();
 
   useEffect(() => {
-    async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.replace("/admin/login");
-        return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Only act on the initial resolution and explicit sign-in/out events
+        if (event === "SIGNED_OUT") {
+          router.replace("/admin/login");
+          return;
+        }
+
+        if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          if (!session) {
+            router.replace("/admin/login");
+            return;
+          }
+
+          // Check role — graceful: if table missing or no row, allow through
+          const { data: staffRow } = await supabase
+            .from("staff")
+            .select("role")
+            .eq("id", session.user.id)
+            .single();
+
+          // Only redirect if there is an explicit 'reception' role
+          if (staffRow?.role === "reception") {
+            router.replace("/reception");
+          }
+          // 'admin' or no row → allowed
+        }
       }
+    );
 
-      // Check role in the staff table.
-      // If the table doesn't exist yet, or this user has no row yet,
-      // we allow access — the session itself is the auth gate for /admin.
-      const { data: staffRow, error } = await supabase
-        .from("staff")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
-
-      // If there's a DB error (table missing, network, etc.) or no row —
-      // fall through and allow access. Don't sign the user out.
-      if (error || !staffRow) {
-        return;
-      }
-
-      // Only redirect if the role is explicitly 'reception'
-      if (staffRow.role === "reception") {
-        router.replace("/reception");
-      }
-
-      // role === 'admin' (or any future role) → allowed, do nothing
-    }
-
-    checkSession();
+    return () => subscription.unsubscribe();
   }, [router]);
 }
