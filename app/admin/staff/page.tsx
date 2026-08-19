@@ -125,6 +125,7 @@ export default function AdminStaffPage() {
                 autoComplete="off"
                 className="field text-flora-charcoal"
                 placeholder="staff@florafirenze.com"
+                suppressHydrationWarning
               />
             </div>
 
@@ -138,6 +139,7 @@ export default function AdminStaffPage() {
                 name="password"
                 type="password"
                 required
+                suppressHydrationWarning
                 minLength={8}
                 autoComplete="new-password"
                 className="field text-flora-charcoal"
