@@ -43,6 +43,36 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Diagnostic endpoint: /api/admin/create-staff?debug=1
+    if (request.nextUrl.searchParams.get("debug") === "1") {
+      const user = await getCallerUser(request);
+      
+      const { data: rawStaffTable, error: dumpError } = await supabaseAdmin
+        .from("staff")
+        .select("*");
+        
+      const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
+
+      return NextResponse.json({
+        diagnostic: {
+          caller: {
+            id: user?.id ?? "NO_USER",
+            email: user?.email ?? "NO_EMAIL",
+            isAuthenticated: !!user
+          },
+          staffTableContent: rawStaffTable,
+          staffTableFetchError: dumpError?.message || null,
+          allAuthUsersCount: authUsers?.users?.length || 0,
+          authUsersFetchError: authUsersError?.message || null,
+          envVariablesPresent: {
+            SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+            SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          }
+        }
+      });
+    }
+
     const user = await getCallerUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -52,6 +82,7 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (listError) {
+      console.error("[create-staff API] Error fetching staff table:", listError);
       return NextResponse.json({ error: listError.message }, { status: 500 });
     }
 
@@ -59,15 +90,17 @@ export async function GET(request: NextRequest) {
     const callerRow = (allStaff ?? []).find((s) => s.id === user.id);
 
     // ── AUTO-BOOTSTRAP ────────────────────────────────────────────────────────
-    // If no admin rows exist yet in the staff table, automatically register the
-    // current authenticated user as the first admin.
     if (adminRows.length === 0 && user.email) {
       console.log("[create-staff] Auto-bootstrapping first admin user:", user.email);
-      await supabaseAdmin.from("staff").upsert({
+      const { error: upsertErr } = await supabaseAdmin.from("staff").upsert({
         id: user.id,
         email: user.email.toLowerCase(),
         role: "admin",
       });
+      
+      if (upsertErr) {
+        console.error("[create-staff API] Error during auto-bootstrap upsert:", upsertErr);
+      }
 
       const { data: refreshedStaff } = await supabaseAdmin
         .from("staff")
@@ -78,6 +111,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (callerRow?.role !== "admin") {
+      console.warn("[create-staff API] Forbidden. Caller row:", callerRow, "Admin rows count:", adminRows.length);
       return NextResponse.json(
         { error: "Forbidden — only admins can manage staff accounts." },
         { status: 403 }
@@ -111,9 +145,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Fetch current staff table
-    const { data: allStaff } = await supabaseAdmin
+    const { data: allStaff, error: fetchErr } = await supabaseAdmin
       .from("staff")
       .select("*");
+      
+    if (fetchErr) {
+       console.error("[create-staff POST] Error fetching staff table:", fetchErr);
+    }
 
     const adminRows = (allStaff ?? []).filter((s) => s.role === "admin");
     const callerRow = (allStaff ?? []).find((s) => s.id === user.id);
@@ -122,12 +160,17 @@ export async function POST(request: NextRequest) {
 
     // In bootstrap mode, ensure caller is saved as admin
     if (isBootstrap && user.email) {
-      await supabaseAdmin.from("staff").upsert({
+      console.log("[create-staff POST] Bootstrap mode active. Upserting caller as admin:", user.id);
+      const { error: upsertErr } = await supabaseAdmin.from("staff").upsert({
         id: user.id,
         email: user.email.toLowerCase(),
         role: "admin",
       });
+      if (upsertErr) {
+         console.error("[create-staff POST] Bootstrap upsert error:", upsertErr);
+      }
     } else if (!isAdmin) {
+      console.warn("[create-staff POST] Forbidden. Caller role is not admin. CallerRow:", callerRow);
       return NextResponse.json(
         { error: "Forbidden — only admins can manage staff accounts." },
         { status: 403 }
@@ -156,11 +199,14 @@ export async function POST(request: NextRequest) {
 
     // 4. If adding themselves, it's already done in bootstrap
     if (user.email && normalizedEmail === user.email.toLowerCase()) {
-      await supabaseAdmin.from("staff").upsert({
+      const { error: upsertSelfErr } = await supabaseAdmin.from("staff").upsert({
         id: user.id,
         email: normalizedEmail,
         role: role as StaffRole,
       });
+      if (upsertSelfErr) {
+         console.error("[create-staff POST] Error upserting self:", upsertSelfErr);
+      }
       return NextResponse.json({ ok: true, userId: user.id }, { status: 201 });
     }
 
@@ -172,6 +218,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (createError || !newUserData.user) {
+      console.error("[create-staff POST] Error creating auth user:", createError);
       return NextResponse.json({ error: createError?.message ?? "Failed to create user." }, { status: 422 });
     }
 
@@ -185,13 +232,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (insertError) {
+      console.error("[create-staff POST] Error inserting into staff table (rolling back user creation):", insertError);
       await supabaseAdmin.auth.admin.deleteUser(newUserId); // rollback
       return NextResponse.json({ error: "Staff insert failed: " + insertError.message }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, userId: newUserId }, { status: 201 });
   } catch (err) {
-    console.error("[create-staff] Unexpected error:", err);
+    console.error("[create-staff] Unexpected POST error:", err);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
