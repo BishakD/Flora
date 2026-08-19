@@ -69,7 +69,10 @@ function CustomRoleDropdown() {
 
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -81,13 +84,13 @@ function CustomRoleDropdown() {
     { id: "reception", label: "Reception" },
     { id: "admin", label: "Admin" },
   ];
-  
-  const selected = roles.find(r => r.id === value) || roles[0];
+
+  const selected = roles.find((r) => r.id === value) || roles[0];
 
   return (
     <div className="relative w-full" ref={containerRef}>
       <input type="hidden" name="role" value={value} />
-      
+
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -95,17 +98,31 @@ function CustomRoleDropdown() {
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className={value ? "text-flora-charcoal" : "text-flora-warm-grey/70"}>
+        <span
+          className={value ? "text-flora-charcoal" : "text-flora-warm-grey/70"}
+        >
           {selected.label}
         </span>
-        <svg className={`w-4 h-4 text-flora-gold transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        <svg
+          className={`w-4 h-4 text-flora-gold transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M19 9l-7 7-7-7"
+          ></path>
         </svg>
       </button>
 
-      <div 
+      <div
         className={`absolute z-10 w-full mt-1 bg-flora-ivory border border-flora-line shadow-lift rounded-md overflow-hidden transition-all duration-200 origin-top ${
-          open ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 pointer-events-none"
+          open
+            ? "opacity-100 scale-y-100"
+            : "opacity-0 scale-y-0 pointer-events-none"
         }`}
         role="listbox"
       >
@@ -113,7 +130,7 @@ function CustomRoleDropdown() {
           <button
             key={r.id}
             type="button"
-            className={`w-full text-left px-4 py-3 font-sans text-sm transition-colors duration-150 ${value === r.id ? 'bg-flora-cream text-flora-navy font-medium' : 'text-flora-charcoal hover:bg-flora-cream'}`}
+            className={`w-full text-left px-4 py-3 font-sans text-sm transition-colors duration-150 ${value === r.id ? "bg-flora-cream text-flora-navy font-medium" : "text-flora-charcoal hover:bg-flora-cream"}`}
             role="option"
             aria-selected={value === r.id}
             onClick={() => {
@@ -143,7 +160,7 @@ export default function AdminStaffPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
-  
+
   const [deleteTarget, setDeleteTarget] = useState<Staff | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -170,15 +187,20 @@ export default function AdminStaffPage() {
 
   // Wait for auth state to fully restore before calling the API
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if ((event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
-          loadStaff(session.access_token);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        (event === "INITIAL_SESSION" ||
+          event === "SIGNED_IN" ||
+          event === "TOKEN_REFRESHED") &&
+        session
+      ) {
+        loadStaff(session.access_token);
       }
-    );
+    });
     return () => subscription.unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Form submit ───────────────────────────────────────────────────────────
@@ -196,7 +218,9 @@ export default function AdminStaffPage() {
 
     startTransition(async () => {
       // Use getUser() to get a fresh, validated token
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         setFormError("Your session has expired. Please log in again.");
         setFormState("error");
@@ -207,7 +231,7 @@ export default function AdminStaffPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ name, email, password, role }),
       });
@@ -233,7 +257,9 @@ export default function AdminStaffPage() {
     setDeleting(true);
     setListError(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         setListError("Your session has expired. Please log in again.");
         setDeleting(false);
@@ -273,18 +299,24 @@ export default function AdminStaffPage() {
           busy={deleting}
         />
       )}
-      
-      <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
 
+      <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
         {/* ── Add Staff Form ──────────────────────────────────────────────── */}
         <div className="rounded-lg border border-flora-line bg-flora-ivory p-6 shadow-lift h-fit">
           <p className="eyebrow text-flora-gold">Admin Panel</p>
-          <h2 className="display-title mt-1 text-[1.3rem] text-flora-navy">Add Staff Member</h2>
+          <h2 className="display-title mt-1 text-[1.3rem] text-flora-navy">
+            Add Staff Member
+          </h2>
           <p className="mt-1 font-sans text-[0.78rem] text-flora-grey leading-relaxed">
-            Creates a new staff login. The account is immediately active — no email verification needed.
+            Creates a new staff login. The account is immediately active — no
+            email verification needed.
           </p>
 
-          <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-5">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="mt-6 flex flex-col gap-5"
+          >
             {/* Full Name */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="staff-name" className="eyebrow text-flora-grey">
@@ -321,7 +353,10 @@ export default function AdminStaffPage() {
 
             {/* Password */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="staff-password" className="eyebrow text-flora-grey">
+              <label
+                htmlFor="staff-password"
+                className="eyebrow text-flora-grey"
+              >
                 Password
               </label>
               <input
@@ -347,12 +382,18 @@ export default function AdminStaffPage() {
 
             {/* Feedback */}
             {formState === "success" && (
-              <p role="alert" className="rounded border border-flora-sage bg-flora-cream px-3 py-2 font-sans text-[0.78rem] text-flora-sage-dark">
+              <p
+                role="alert"
+                className="rounded border border-flora-sage bg-flora-cream px-3 py-2 font-sans text-[0.78rem] text-flora-sage-dark"
+              >
                 ✓ Staff account created successfully
               </p>
             )}
             {formState === "error" && formError && (
-              <p role="alert" className="rounded border border-flora-rose bg-flora-blush px-3 py-2 font-sans text-[0.78rem] text-flora-terracotta">
+              <p
+                role="alert"
+                className="rounded border border-flora-rose bg-flora-blush px-3 py-2 font-sans text-[0.78rem] text-flora-terracotta"
+              >
                 {formError}
               </p>
             )}
@@ -370,14 +411,23 @@ export default function AdminStaffPage() {
         {/* ── Staff List ──────────────────────────────────────────────────── */}
         <div className="rounded-lg border border-flora-line bg-flora-ivory p-6 shadow-lift h-fit">
           <p className="eyebrow text-flora-gold">Current Team</p>
-          <h2 className="display-title mt-1 text-[1.3rem] text-flora-navy">Staff Accounts</h2>
+          <h2 className="display-title mt-1 text-[1.3rem] text-flora-navy">
+            Staff Accounts
+          </h2>
 
           {listLoading && (
-            <p className="mt-6 font-sans text-[0.82rem] text-flora-grey">Loading…</p>
+            <p className="mt-6 font-sans text-[0.82rem] text-flora-grey">
+              Loading…
+            </p>
           )}
 
           {listError && (
-            <p role="alert" className="mt-4 font-sans text-[0.82rem] text-flora-terracotta">{listError}</p>
+            <p
+              role="alert"
+              className="mt-4 font-sans text-[0.82rem] text-flora-terracotta"
+            >
+              {listError}
+            </p>
           )}
 
           {!listLoading && !listError && staffList.length === 0 && (
@@ -391,18 +441,33 @@ export default function AdminStaffPage() {
               <table className="w-full font-sans text-[0.8rem]">
                 <thead>
                   <tr className="border-b border-flora-line text-left">
-                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Name</th>
-                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Email</th>
-                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Role</th>
-                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Added</th>
+                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">
+                      Name
+                    </th>
+                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">
+                      Email
+                    </th>
+                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">
+                      Role
+                    </th>
+                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">
+                      Added
+                    </th>
                     <th className="pb-2"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {staffList.map((member) => (
-                    <tr key={member.id} className="border-b border-flora-line/50 hover:bg-flora-cream/40 transition-colors group">
-                      <td className="py-3 pr-4 text-flora-charcoal">{member.name || "—"}</td>
-                      <td className="py-3 pr-4 text-flora-charcoal">{member.email}</td>
+                    <tr
+                      key={member.id}
+                      className="border-b border-flora-line/50 hover:bg-flora-cream/40 transition-colors group"
+                    >
+                      <td className="py-3 pr-4 text-flora-charcoal">
+                        {member.name || "—"}
+                      </td>
+                      <td className="py-3 pr-4 text-flora-charcoal">
+                        {member.email}
+                      </td>
                       <td className="py-3 pr-4">
                         <span
                           className={`inline-block rounded px-2 py-0.5 text-[0.62rem] font-medium uppercase tracking-[0.1em] border ${
@@ -415,23 +480,22 @@ export default function AdminStaffPage() {
                         </span>
                       </td>
                       <td className="py-3 text-flora-grey">
-                        {new Date(member.created_at).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                        {new Date(member.created_at).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          },
+                        )}
                       </td>
                       <td className="py-3 text-right">
                         <button
                           onClick={() => setDeleteTarget(member)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-flora-grey hover:text-flora-terracotta rounded hover:bg-flora-blush"
+                          className="px-3 py-1 font-sans text-[0.65rem] font-medium tracking-wide uppercase rounded border border-flora-rose text-flora-terracotta hover:bg-flora-blush transition-colors"
                           title="Remove staff member"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18"/>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                          </svg>
+                          Remove
                         </button>
                       </td>
                     </tr>
