@@ -37,7 +37,7 @@ function DeleteStaffModal({
           This change is unchangeable and permanent.
         </p>
         <p className="mt-2 font-sans text-[0.82rem] text-flora-grey">
-          This staff member will immediately lose access to the admin and reception panels.
+          This staff member will immediately lose all access to the system.
         </p>
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
