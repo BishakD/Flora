@@ -470,7 +470,7 @@ export async function sendStaffWelcomeEmail(data: {
   staffName: string;
   role: "admin" | "reception";
 }) {
-  const loginUrl = "https://flora.ferenc.com/staff/login";
+  const loginUrl = "https://florapremium.vercel.app/staff/login";
 
   const detailsHtml = `
     <tr>
