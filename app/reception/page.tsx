@@ -196,6 +196,75 @@ function CancelBookingModal({
   );
 }
 
+function DeleteBookingModal({
+  booking,
+  onConfirm,
+  onCancel,
+  busy,
+}: {
+  booking: BookingRow;
+  onConfirm: () => void;
+  onCancel: () => void;
+  busy: boolean;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-flora-espresso/40 px-4 backdrop-blur-sm"
+    >
+      <div className="w-full max-w-md rounded-lg border border-flora-line bg-flora-ivory p-7 shadow-lift">
+        <p className="eyebrow text-flora-terracotta">Permanent Deletion</p>
+        <h2
+          id="delete-modal-title"
+          className="display-title mt-1 text-[1.3rem] text-flora-navy"
+        >
+          Permanently delete this booking?
+        </h2>
+        <p className="mt-3 font-sans text-[0.82rem] text-flora-terracotta font-medium">
+          This cannot be undone and does NOT issue a refund.
+        </p>
+        <div className="mt-3 rounded border border-flora-line bg-flora-cream/50 p-3 font-sans text-[0.78rem] text-flora-charcoal space-y-1">
+          <p>
+            <span className="text-flora-grey">Guest:</span>{" "}
+            <strong>{booking.guest_name}</strong>
+          </p>
+          <p>
+            <span className="text-flora-grey">Ref:</span>{" "}
+            <span className="font-mono text-xs">
+              {(booking as any).booking_reference ?? booking.id}
+            </span>
+          </p>
+          <p>
+            <span className="text-flora-grey">Booked On:</span>{" "}
+            {fmtBookingDateTime(booking.created_at).date} ·{" "}
+            {fmtBookingDateTime(booking.created_at).time}
+          </p>
+        </div>
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="luxury-button border-flora-line text-flora-grey [--button-fill:var(--flora-sage)] [--button-ink:var(--flora-navy)] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+            className="luxury-button border-flora-terracotta text-flora-terracotta [--button-fill:var(--flora-terracotta)] [--button-ink:var(--flora-ivory-card)] disabled:opacity-50"
+          >
+            {busy ? "Deleting…" : "Delete Permanently"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Admin Dashboard Component ───────────────────────────────────────────
 
 export default function ReceptionDashboardPage() {
