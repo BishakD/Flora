@@ -15,7 +15,12 @@ type BookingRow = Booking & {
 };
 
 type LoadState = "loading" | "ready" | "error";
-type SupabaseError = { message: string; code?: string; details?: string; hint?: string };
+type SupabaseError = {
+  message: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+};
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -64,26 +69,35 @@ function fmtBookingDateTime(dateStr?: string | null) {
   }
 }
 
-function getDisplayStatus(b: BookingRow): { label: string; className: string; description?: string } {
+function getDisplayStatus(b: BookingRow): {
+  label: string;
+  className: string;
+  description?: string;
+} {
   if (b.payment_status === "refund_failed") {
     return {
       label: "Refund Failed",
-      className: "bg-flora-blush text-flora-terracotta border border-flora-rose font-semibold",
-      description: b.refund_error || "Payment refund API call failed. Manual action required.",
+      className:
+        "bg-flora-blush text-flora-terracotta border border-flora-rose font-semibold",
+      description:
+        b.refund_error ||
+        "Payment refund API call failed. Manual action required.",
     };
   }
 
   if (b.payment_status === "refunded" || b.status === "cancelled") {
     return {
       label: "Refunded",
-      className: "bg-flora-ice text-flora-slate border border-flora-line font-medium",
+      className:
+        "bg-flora-ice text-flora-slate border border-flora-line font-medium",
     };
   }
 
   if (b.payment_status === "deposit_paid") {
     return {
       label: "Paid",
-      className: "bg-flora-sage/70 text-flora-navy border border-flora-sage font-medium",
+      className:
+        "bg-flora-sage/70 text-flora-navy border border-flora-sage font-medium",
     };
   }
 
@@ -129,14 +143,35 @@ function CancelBookingModal({
           Cancel this booking and refund {formattedDeposit}?
         </h2>
         <div className="mt-4 rounded border border-flora-line bg-flora-cream/50 p-3 font-sans text-[0.78rem] text-flora-charcoal space-y-1.5">
-          <p><span className="text-flora-grey">Guest:</span> <strong className="font-medium">{booking.guest_name}</strong></p>
-          <p><span className="text-flora-grey">Room:</span> {booking.room_types?.name ?? "Flora Room"}</p>
-          <p><span className="text-flora-grey">Dates:</span> {fmtDate(booking.check_in)} – {fmtDate(booking.check_out)}</p>
-          <p><span className="text-flora-grey">Booked On:</span> {fmtBookingDateTime(booking.created_at).date} · {fmtBookingDateTime(booking.created_at).time}</p>
-          <p><span className="text-flora-grey">Refund Amount:</span> <strong className="text-flora-navy font-semibold">{formattedDeposit}</strong></p>
+          <p>
+            <span className="text-flora-grey">Guest:</span>{" "}
+            <strong className="font-medium">{booking.guest_name}</strong>
+          </p>
+          <p>
+            <span className="text-flora-grey">Room:</span>{" "}
+            {booking.room_types?.name ?? "Flora Room"}
+          </p>
+          <p>
+            <span className="text-flora-grey">Dates:</span>{" "}
+            {fmtDate(booking.check_in)} – {fmtDate(booking.check_out)}
+          </p>
+          <p>
+            <span className="text-flora-grey">Booked On:</span>{" "}
+            {fmtBookingDateTime(booking.created_at).date} ·{" "}
+            {fmtBookingDateTime(booking.created_at).time}
+          </p>
+          <p>
+            <span className="text-flora-grey">Refund Amount:</span>{" "}
+            <strong className="text-flora-navy font-semibold">
+              {formattedDeposit}
+            </strong>
+          </p>
         </div>
         <p className="mt-3 font-sans text-[0.8rem] text-flora-grey leading-relaxed">
-          This will issue a Razorpay refund for the deposit amount and send the cancellation confirmation email to <strong className="text-flora-charcoal">{booking.guest_email}</strong>.
+          This will issue a Razorpay refund for the deposit amount and send the
+          cancellation confirmation email to{" "}
+          <strong className="text-flora-charcoal">{booking.guest_email}</strong>
+          .
         </p>
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
@@ -191,9 +226,21 @@ function DeleteBookingModal({
           This cannot be undone and does NOT issue a refund.
         </p>
         <div className="mt-3 rounded border border-flora-line bg-flora-cream/50 p-3 font-sans text-[0.78rem] text-flora-charcoal space-y-1">
-          <p><span className="text-flora-grey">Guest:</span> <strong>{booking.guest_name}</strong></p>
-          <p><span className="text-flora-grey">Ref:</span> <span className="font-mono text-xs">{(booking as any).booking_reference ?? booking.id}</span></p>
-          <p><span className="text-flora-grey">Booked On:</span> {fmtBookingDateTime(booking.created_at).date} · {fmtBookingDateTime(booking.created_at).time}</p>
+          <p>
+            <span className="text-flora-grey">Guest:</span>{" "}
+            <strong>{booking.guest_name}</strong>
+          </p>
+          <p>
+            <span className="text-flora-grey">Ref:</span>{" "}
+            <span className="font-mono text-xs">
+              {(booking as any).booking_reference ?? booking.id}
+            </span>
+          </p>
+          <p>
+            <span className="text-flora-grey">Booked On:</span>{" "}
+            {fmtBookingDateTime(booking.created_at).date} ·{" "}
+            {fmtBookingDateTime(booking.created_at).time}
+          </p>
         </div>
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
@@ -238,44 +285,43 @@ export default function AdminDashboardPage() {
   const isFetchingRef = useRef(false);
 
   // ── Fetch Bookings ─────────────────────────────────────────────────────────
-  const fetchBookings = useCallback(
-    async (isInitial = false) => {
-      if (isFetchingRef.current) return;
-      isFetchingRef.current = true;
+  const fetchBookings = useCallback(async (isInitial = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-      if (isInitial) setLoadState("loading");
+    if (isInitial) setLoadState("loading");
 
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*, room_types(name), rate_plans!bookings_rate_plan_id_fkey(name, currency)")
-        .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("bookings")
+      .select(
+        "*, room_types(name), rate_plans!bookings_rate_plan_id_fkey(name, currency)",
+      )
+      .order("created_at", { ascending: false });
 
-      isFetchingRef.current = false;
+    isFetchingRef.current = false;
 
-      if (error) {
-        if (isInitial) {
-          const extracted: SupabaseError = {
-            message: error.message,
-            code: (error as unknown as Record<string, string>).code ?? undefined,
-            details: (error as unknown as Record<string, string>).details ?? undefined,
-            hint: (error as unknown as Record<string, string>).hint ?? undefined,
-          };
-          setFetchError(extracted);
-          setLoadState("error");
-        }
-      } else {
-        setBookings((data as BookingRow[]) ?? []);
-        if (isInitial) setLoadState("ready");
+    if (error) {
+      if (isInitial) {
+        const extracted: SupabaseError = {
+          message: error.message,
+          code: (error as unknown as Record<string, string>).code ?? undefined,
+          details:
+            (error as unknown as Record<string, string>).details ?? undefined,
+          hint: (error as unknown as Record<string, string>).hint ?? undefined,
+        };
+        setFetchError(extracted);
+        setLoadState("error");
       }
-    },
-    [],
-  );
+    } else {
+      setBookings((data as BookingRow[]) ?? []);
+      if (isInitial) setLoadState("ready");
+    }
+  }, []);
 
   // Initial load
   useEffect(() => {
     fetchBookings(true);
   }, [fetchBookings]);
-
 
   // ── Auto-refresh: Polling every 20 seconds ─────────────────────────────────
   useEffect(() => {
@@ -350,7 +396,9 @@ export default function AdminDashboardPage() {
         setCancelTarget(null);
       } else {
         console.error("[Admin] Cancel failed:", data);
-        alert(`Cancellation failed:\n${data.error || data.refund_error || "Unknown error"}`);
+        alert(
+          `Cancellation failed:\n${data.error || data.refund_error || "Unknown error"}`,
+        );
       }
     } catch (err: any) {
       console.error("[Admin] Cancellation network error:", err);
@@ -385,7 +433,10 @@ export default function AdminDashboardPage() {
         setDeleteTarget(null);
       } else {
         // Fallback to direct client delete
-        const { error } = await supabase.from("bookings").delete().eq("id", deleteTarget.id);
+        const { error } = await supabase
+          .from("bookings")
+          .delete()
+          .eq("id", deleteTarget.id);
         if (!error) {
           setBookings((prev) => prev.filter((b) => b.id !== deleteTarget.id));
           setDeleteTarget(null);
@@ -426,9 +477,19 @@ export default function AdminDashboardPage() {
           </p>
           {fetchError && (
             <div className="max-w-lg rounded border border-flora-line bg-flora-ivory p-5 font-sans text-[0.78rem] text-flora-charcoal space-y-2">
-              <p><span className="font-medium">Error:</span> {fetchError.message}</p>
-              {fetchError.code && <p><span className="font-medium">Code:</span> {fetchError.code}</p>}
-              {fetchError.hint && <p><span className="font-medium">Hint:</span> {fetchError.hint}</p>}
+              <p>
+                <span className="font-medium">Error:</span> {fetchError.message}
+              </p>
+              {fetchError.code && (
+                <p>
+                  <span className="font-medium">Code:</span> {fetchError.code}
+                </p>
+              )}
+              {fetchError.hint && (
+                <p>
+                  <span className="font-medium">Hint:</span> {fetchError.hint}
+                </p>
+              )}
             </div>
           )}
           <button
@@ -450,7 +511,7 @@ export default function AdminDashboardPage() {
     ? bookings.filter((b) =>
         ((b as any).booking_reference as string | null)
           ?.toUpperCase()
-          .includes(trimmedQuery)
+          .includes(trimmedQuery),
       )
     : bookings;
 
@@ -515,16 +576,24 @@ export default function AdminDashboardPage() {
           <div className="rounded-lg border border-flora-line bg-flora-ivory p-16 text-center shadow-soft">
             {bookings.length === 0 ? (
               <>
-                <p className="font-display text-2xl text-flora-navy">No reservations yet</p>
+                <p className="font-display text-2xl text-flora-navy">
+                  No reservations yet
+                </p>
                 <p className="mt-2 font-sans text-sm text-flora-grey">
                   New bookings will automatically appear here in real time.
                 </p>
               </>
             ) : (
               <>
-                <p className="font-display text-2xl text-flora-navy">No results</p>
+                <p className="font-display text-2xl text-flora-navy">
+                  No results
+                </p>
                 <p className="mt-2 font-sans text-sm text-flora-grey">
-                  No booking found with reference <span className="font-mono font-bold">{searchQuery.toUpperCase()}</span>.
+                  No booking found with reference{" "}
+                  <span className="font-mono font-bold">
+                    {searchQuery.toUpperCase()}
+                  </span>
+                  .
                 </p>
               </>
             )}
@@ -548,7 +617,7 @@ export default function AdminDashboardPage() {
                   ].map((col) => (
                     <th
                       key={col}
-                      className="whitespace-nowrap px-4 py-3 font-sans text-[0.62rem] font-medium uppercase tracking-[0.14em] text-flora-grey"
+                      className={`whitespace-nowrap px-4 py-3 font-sans text-[0.62rem] font-medium uppercase tracking-[0.14em] text-flora-grey ${col === "Actions" ? "text-right" : ""}`}
                     >
                       {col}
                     </th>
@@ -564,7 +633,8 @@ export default function AdminDashboardPage() {
                       : Math.round(Number(b.total_price) * 0.25);
 
                   const statusInfo = getDisplayStatus(b);
-                  const isCancelled = b.status === "cancelled" || b.payment_status === "refunded";
+                  const isCancelled =
+                    b.status === "cancelled" || b.payment_status === "refunded";
                   const bookingTime = fmtBookingDateTime(b.created_at);
 
                   return (
@@ -576,8 +646,12 @@ export default function AdminDashboardPage() {
                     >
                       {/* 1. Booked On (Date & Time) */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="font-medium text-flora-navy">{bookingTime.date}</div>
-                        <div className="font-mono text-[0.72rem] text-flora-grey">{bookingTime.time}</div>
+                        <div className="font-medium text-flora-navy">
+                          {bookingTime.date}
+                        </div>
+                        <div className="font-mono text-[0.72rem] text-flora-grey">
+                          {bookingTime.time}
+                        </div>
                       </td>
 
                       {/* 2. Guest Name */}
@@ -587,15 +661,24 @@ export default function AdminDashboardPage() {
 
                       {/* 3. Contact Details (Email + Phone) */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-flora-charcoal">{b.guest_email}</div>
-                        <div className="text-flora-grey font-mono text-[0.72rem]">{b.guest_phone}</div>
+                        <div className="text-flora-charcoal">
+                          {b.guest_email}
+                        </div>
+                        <div className="text-flora-grey font-mono text-[0.72rem]">
+                          {b.guest_phone}
+                        </div>
                       </td>
 
                       {/* 4. Guests (No. of Adults & Children) */}
                       <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
-                        <span>{b.adults} {b.adults === 1 ? "Adult" : "Adults"}</span>
+                        <span>
+                          {b.adults} {b.adults === 1 ? "Adult" : "Adults"}
+                        </span>
                         {b.children > 0 ? (
-                          <span className="text-flora-grey ml-1">· {b.children} {b.children === 1 ? "Child" : "Children"}</span>
+                          <span className="text-flora-grey ml-1">
+                            · {b.children}{" "}
+                            {b.children === 1 ? "Child" : "Children"}
+                          </span>
                         ) : null}
                       </td>
 
@@ -617,17 +700,19 @@ export default function AdminDashboardPage() {
                           className="font-mono text-base font-bold tracking-widest text-flora-navy"
                           title={b.id}
                         >
-                          {(b as any).booking_reference ?? b.id.toUpperCase().slice(0, 6)}
+                          {(b as any).booking_reference ??
+                            b.id.toUpperCase().slice(0, 6)}
                         </span>
                       </td>
 
                       {/* 8. Amount Paid */}
                       <td className="px-4 py-3 whitespace-nowrap font-medium text-flora-navy">
-                        {b.payment_status === "deposit_paid" || b.payment_status === "refunded"
+                        {b.payment_status === "deposit_paid" ||
+                        b.payment_status === "refunded"
                           ? formatMoney(depositPaidAmount, currency)
                           : b.deposit_amount
-                          ? formatMoney(b.deposit_amount, currency)
-                          : "—"}
+                            ? formatMoney(b.deposit_amount, currency)
+                            : "—"}
                       </td>
 
                       {/* 9. Status */}
@@ -641,8 +726,8 @@ export default function AdminDashboardPage() {
                       </td>
 
                       {/* 10. Actions (Cancel & Delete) */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <td className="px-4 py-3 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
                             disabled={isCancelled || cancelling}
@@ -661,7 +746,21 @@ export default function AdminDashboardPage() {
                             aria-label={`Permanently delete booking for ${b.guest_name}`}
                             title="Delete"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            </svg>
                           </button>
                         </div>
                       </td>

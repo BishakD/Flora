@@ -561,7 +561,7 @@ export default function ReceptionDashboardPage() {
                   ].map((col) => (
                     <th
                       key={col}
-                      className="whitespace-nowrap px-4 py-3 font-sans text-[0.62rem] font-medium uppercase tracking-[0.14em] text-flora-grey"
+                      className={`whitespace-nowrap px-4 py-3 font-sans text-[0.62rem] font-medium uppercase tracking-[0.14em] text-flora-grey ${col === "Actions" ? "text-right" : ""}`}
                     >
                       {col}
                     </th>
@@ -670,8 +670,8 @@ export default function ReceptionDashboardPage() {
                       </td>
 
                       {/* 10. Actions (Cancel & Delete) */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <td className="px-4 py-3 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
                             disabled={isCancelled || cancelling}
