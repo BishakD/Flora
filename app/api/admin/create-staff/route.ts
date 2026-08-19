@@ -320,14 +320,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send Welcome Email (Non-blocking)
-    sendStaffWelcomeEmail({
-      staffEmail: normalizedEmail,
-      staffName: normalizedName,
-      role: role as "admin" | "reception",
-    }).catch((err) => {
+    // Send Welcome Email (Wait for it so Vercel doesn't kill the lambda)
+    try {
+      await sendStaffWelcomeEmail({
+        staffEmail: normalizedEmail,
+        staffName: normalizedName,
+        role: role as "admin" | "reception",
+      });
+    } catch (err) {
       console.error("[create-staff POST] Error sending welcome email:", err);
-    });
+    }
 
     return NextResponse.json({ ok: true, userId: newUserId }, { status: 201 });
   } catch (err) {
@@ -417,12 +419,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (targetStaff && targetStaff.email) {
-      sendStaffRemovalEmail({
-        staffEmail: targetStaff.email,
-        staffName: targetStaff.name || "Staff Member",
-      }).catch((err) => {
+      try {
+        await sendStaffRemovalEmail({
+          staffEmail: targetStaff.email,
+          staffName: targetStaff.name || "Staff Member",
+        });
+      } catch (err) {
         console.error("[delete-staff API] Error sending removal email:", err);
-      });
+      }
     }
 
     return NextResponse.json({ ok: true });

@@ -65,6 +65,8 @@ function emailWrapper({
   detailsHtml,
   callToActionHtml = "",
   afterNoteHtml = "",
+  summaryTitle = "Reservation Summary",
+  footerSignature = "The Reservations Team · Flora Palazzo",
 }: {
   headline: string;
   statusBadge: string;
@@ -72,6 +74,8 @@ function emailWrapper({
   detailsHtml: string;
   callToActionHtml?: string;
   afterNoteHtml?: string;
+  summaryTitle?: string;
+  footerSignature?: string;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -115,7 +119,7 @@ function emailWrapper({
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#f6f1e7;border:1px solid #dcd3c4;border-radius:4px;margin-bottom:28px;">
                 <tr>
                   <td style="padding:20px 24px;">
-                    <p style="margin:0 0 14px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.15em;color:#c6a15b;text-transform:uppercase;">Reservation Summary</p>
+                    <p style="margin:0 0 14px 0;font-family:Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.15em;color:#c6a15b;text-transform:uppercase;">${summaryTitle}</p>
                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
                       ${detailsHtml}
                     </table>
@@ -129,7 +133,7 @@ function emailWrapper({
 
               <p style="margin:24px 0 0 0;font-family:Georgia,serif;font-size:14px;color:#6b6660;line-height:1.6;">
                 Warm regards,<br>
-                <em style="color:#1b2a3f;">The Reservations Team · Flora Palazzo</em>
+                <em style="color:#1b2a3f;">${footerSignature}</em>
               </p>
             </td>
           </tr>
@@ -491,6 +495,8 @@ export async function sendStaffWelcomeEmail(data: {
     statusBadge: `<span style="display:inline-block;padding:4px 12px;background-color:#d4e5d7;color:#1b2a3f;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:20px;border:1px solid #b8ccbe;">Account Active</span>`,
     messageIntro: `Dear ${data.staffName},<br><br>Welcome to Flora Palazzo! Your staff account has been successfully created. You can now log in to the staff portal using your email address and the password you set.`,
     detailsHtml,
+    summaryTitle: "Account Details",
+    footerSignature: "Management · Flora Palazzo",
     callToActionHtml: `
       <div style="margin:32px 0;text-align:center;">
         <a href="${loginUrl}" style="display:inline-block;padding:14px 32px;background-color:#1b2a3f;color:#fdfbf6;text-decoration:none;font-family:Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;border-radius:4px;">Log in to Portal</a>
@@ -516,9 +522,11 @@ export async function sendStaffRemovalEmail(data: {
     headline: "Staff Access Revoked",
     statusBadge: `<span style="display:inline-block;padding:4px 12px;background-color:#ead3cd;color:#2b2016;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:20px;border:1px solid #d9afa8;">Access Removed</span>`,
     messageIntro: `Dear ${data.staffName},<br><br>This is to confirm that your staff access to the Flora Palazzo management system has been successfully revoked. You will no longer be able to sign in to the portal.`,
+    summaryTitle: "Account Status",
+    footerSignature: "Management · Flora Palazzo",
     detailsHtml: `
       <tr>
-        <td style="padding:6px 0;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;" width="40%">Account Status</td>
+        <td style="padding:6px 0;font-family:Arial,sans-serif;font-size:12px;color:#6b6660;text-transform:uppercase;letter-spacing:0.08em;" width="40%">Status</td>
         <td style="padding:6px 0;font-family:Georgia,serif;font-size:15px;color:#1b2a3f;font-weight:bold;letter-spacing:0.15em;" align="right">Closed</td>
       </tr>
       <tr>
