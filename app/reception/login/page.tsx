@@ -18,45 +18,53 @@ export default function ReceptionLoginPage() {
     const password = formData.get("password") as string;
 
     startTransition(async () => {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        },
+      );
 
       if (authError || !data.session) {
         setError("Invalid email or password. Please try again.");
         return;
       }
 
-      // Check the user's role in the staff table
-      const { data: staffRow, error: staffError } = await supabase
-        .from("staff")
-        .select("role")
-        .eq("id", data.session.user.id)
-        .single();
+      // Check the user's role securely via the API
+      let role = null;
+      try {
+        const res = await fetch("/api/staff/me", {
+          headers: { Authorization: `Bearer ${data.session.access_token}` },
+        });
+        const json = await res.json();
+        if (res.ok && json.role) {
+          role = json.role;
+        }
+      } catch (err) {
+        console.error("Error checking role:", err);
+      }
 
-      if (staffError || !staffRow) {
-        // Signed in to Supabase Auth but not a staff member
-        await supabase.auth.signOut();
+      if (!role) {
+        // Signed in to Supabase Auth but not a staff member (or API failed).
+        // We do NOT sign them out here, to avoid destroying sessions across other tabs/apps.
         setError("Access denied — this account has no staff role assigned.");
         return;
       }
 
-      if (staffRow.role === "admin") {
+      if (role === "admin") {
         // Admin users are redirected to the full admin panel
         router.push("/admin");
         router.refresh();
         return;
       }
 
-      if (staffRow.role === "reception") {
+      if (role === "reception") {
         router.push("/reception");
         router.refresh();
         return;
       }
 
       // Unknown role
-      await supabase.auth.signOut();
       setError("Access denied — unknown role.");
     });
   }
@@ -78,7 +86,11 @@ export default function ReceptionLoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-7">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="flex flex-col gap-7"
+        >
           {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="eyebrow text-flora-grey">
