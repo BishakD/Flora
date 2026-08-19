@@ -210,6 +210,9 @@ export default function ReceptionDashboardPage() {
   const [cancelTarget, setCancelTarget] = useState<BookingRow | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
+  const [deleteTarget, setDeleteTarget] = useState<BookingRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const isFetchingRef = useRef(false);
 
   // ── Fetch Bookings ─────────────────────────────────────────────────────────
@@ -336,6 +339,51 @@ export default function ReceptionDashboardPage() {
     }
   }
 
+  // ── Delete Action ──────────────────────────────────────────────────────────
+  async function handleDeleteBooking() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
+      const res = await fetch(`/api/admin/bookings/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (res.ok) {
+        setBookings((prev) => prev.filter((b) => b.id !== deleteTarget.id));
+        setDeleteTarget(null);
+      } else {
+        // Fallback to direct client delete
+        const { error } = await supabase
+          .from("bookings")
+          .delete()
+          .eq("id", deleteTarget.id);
+        if (!error) {
+          setBookings((prev) => prev.filter((b) => b.id !== deleteTarget.id));
+          setDeleteTarget(null);
+        } else {
+          console.error("[Admin] Delete failed:", error);
+          alert(`Failed to delete booking:\n${error.message}`);
+        }
+      }
+    } catch (err: any) {
+      console.error("[Admin] Delete network error:", err);
+      alert("Network error deleting booking.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   // ── Render States ──────────────────────────────────────────────────────────
 
   if (loadState === "loading") {
@@ -417,6 +465,14 @@ export default function ReceptionDashboardPage() {
           onConfirm={handleCancelBooking}
           onCancel={() => setCancelTarget(null)}
           busy={cancelling}
+        />
+      )}
+      {deleteTarget && (
+        <DeleteBookingModal
+          booking={deleteTarget}
+          onConfirm={handleDeleteBooking}
+          onCancel={() => setDeleteTarget(null)}
+          busy={deleting}
         />
       )}
 
@@ -624,6 +680,30 @@ export default function ReceptionDashboardPage() {
                             aria-label={`Cancel and refund booking for ${b.guest_name}`}
                           >
                             {isCancelled ? "Cancelled" : "Cancel"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deleting}
+                            onClick={() => setDeleteTarget(b)}
+                            className="luxury-button border-flora-terracotta text-flora-terracotta [--button-fill:var(--flora-terracotta)] [--button-ink:var(--flora-ivory-card)] p-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label={`Permanently delete booking for ${b.guest_name}`}
+                            title="Delete"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            </svg>
                           </button>
                         </div>
                       </td>
