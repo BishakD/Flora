@@ -6,6 +6,62 @@ import { AdminShell } from "@/app/admin/_components/AdminShell";
 import { useAdminSession } from "@/app/admin/_lib/useAdminSession";
 import type { Staff } from "@/types/database";
 
+// ─── Delete confirm modal ────────────────────────────────────────────────────
+function DeleteStaffModal({
+  email,
+  onConfirm,
+  onCancel,
+  busy,
+}: {
+  email: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  busy: boolean;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-flora-espresso/40 px-4 backdrop-blur-sm"
+    >
+      <div className="w-full max-w-md rounded-lg border border-flora-line bg-flora-ivory p-7 shadow-lift">
+        <p className="eyebrow text-flora-gold">Confirm deletion</p>
+        <h2
+          id="delete-modal-title"
+          className="display-title mt-1 text-[1.3rem] text-flora-navy"
+        >
+          Delete &ldquo;{email}&rdquo;?
+        </h2>
+        <p className="mt-3 font-sans text-[0.82rem] text-flora-grey font-medium text-flora-terracotta">
+          This change is unchangeable and permanent.
+        </p>
+        <p className="mt-2 font-sans text-[0.82rem] text-flora-grey">
+          This staff member will immediately lose access to the admin and reception panels.
+        </p>
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="luxury-button border-flora-line text-flora-grey [--button-fill:var(--flora-sage)] [--button-ink:var(--flora-navy)] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+            className="luxury-button border-flora-terracotta text-flora-terracotta [--button-fill:var(--flora-terracotta)] [--button-ink:var(--flora-ivory-card)] disabled:opacity-50"
+          >
+            {busy ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type FormState = "idle" | "success" | "error";
 
 export default function AdminStaffPage() {
@@ -20,6 +76,9 @@ export default function AdminStaffPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
+  
+  const [deleteTarget, setDeleteTarget] = useState<Staff | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Load existing staff — called once we have a confirmed session token
   async function loadStaff(accessToken: string) {
@@ -100,19 +159,21 @@ export default function AdminStaffPage() {
   }
 
   // ── Remove Staff ──────────────────────────────────────────────────────────
-  async function handleRemoveStaff(userId: string) {
-    if (!window.confirm("Are you sure you want to delete this staff member? This cannot be undone.")) return;
+  async function handleRemoveStaff() {
+    if (!deleteTarget) return;
 
-    setListLoading(true);
+    setDeleting(true);
     setListError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setListError("Your session has expired. Please log in again.");
+        setDeleting(false);
+        setDeleteTarget(null);
         return;
       }
 
-      const res = await fetch(`/api/admin/create-staff?id=${userId}`, {
+      const res = await fetch(`/api/admin/create-staff?id=${deleteTarget.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
@@ -120,19 +181,31 @@ export default function AdminStaffPage() {
       const json = await res.json();
       if (!res.ok || json.error) {
         setListError(json.error ?? "Failed to delete staff member.");
+        alert(json.error ?? "Failed to delete staff member.");
       } else {
         // Refresh list
         await loadStaff(session.access_token);
       }
     } catch {
       setListError("An unexpected error occurred while deleting.");
+      alert("An unexpected error occurred while deleting.");
     } finally {
-      setListLoading(false);
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   }
 
   return (
     <AdminShell title="Staff Management" eyebrow="Flora · Firenze">
+      {deleteTarget && (
+        <DeleteStaffModal
+          email={deleteTarget.email}
+          onConfirm={handleRemoveStaff}
+          onCancel={() => setDeleteTarget(null)}
+          busy={deleting}
+        />
+      )}
+      
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
 
         {/* ── Add Staff Form ──────────────────────────────────────────────── */}
@@ -266,7 +339,7 @@ export default function AdminStaffPage() {
                       </td>
                       <td className="py-3 text-right">
                         <button
-                          onClick={() => handleRemoveStaff(member.id)}
+                          onClick={() => setDeleteTarget(member)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-flora-grey hover:text-flora-terracotta rounded hover:bg-flora-blush"
                           title="Remove staff member"
                         >
