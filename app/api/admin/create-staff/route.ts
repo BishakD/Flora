@@ -243,3 +243,64 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+
+export async function DELETE(request: NextRequest) {
+  try {
+    try {
+      assertServiceRoleConfigured();
+    } catch {
+      return NextResponse.json(
+        { error: "Staff management is not yet configured — SUPABASE_SERVICE_ROLE_KEY is missing from .env.local." },
+        { status: 503 }
+      );
+    }
+
+    // 1. Verify caller JWT
+    const user = await getCallerUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized — invalid or missing session." }, { status: 401 });
+    }
+
+    // 2. Verify caller is admin
+    const { data: callerRow } = await supabaseAdmin
+      .from("staff")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (callerRow?.role !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden — only admins can manage staff accounts." },
+        { status: 403 }
+      );
+    }
+
+    // 3. Get target user ID to delete
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get("id");
+
+    if (!targetUserId) {
+      return NextResponse.json({ error: "Missing staff id parameter." }, { status: 400 });
+    }
+
+    // Prevent deleting oneself
+    if (targetUserId === user.id) {
+      return NextResponse.json({ error: "You cannot delete your own admin account." }, { status: 400 });
+    }
+
+    // 4. Delete the Auth user (this cascades and deletes the staff table row too)
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+
+    if (deleteError) {
+      console.error("[delete-staff API] Error deleting user:", deleteError);
+      return NextResponse.json({ error: "Failed to delete staff account." }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[delete-staff] Unexpected DELETE error:", err);
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  }
+}

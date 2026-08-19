@@ -99,12 +99,44 @@ export default function AdminStaffPage() {
     });
   }
 
+  // ── Remove Staff ──────────────────────────────────────────────────────────
+  async function handleRemoveStaff(userId: string) {
+    if (!window.confirm("Are you sure you want to delete this staff member? This cannot be undone.")) return;
+
+    setListLoading(true);
+    setListError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setListError("Your session has expired. Please log in again.");
+        return;
+      }
+
+      const res = await fetch(`/api/admin/create-staff?id=${userId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setListError(json.error ?? "Failed to delete staff member.");
+      } else {
+        // Refresh list
+        await loadStaff(session.access_token);
+      }
+    } catch {
+      setListError("An unexpected error occurred while deleting.");
+    } finally {
+      setListLoading(false);
+    }
+  }
+
   return (
     <AdminShell title="Staff Management" eyebrow="Flora · Firenze">
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
 
         {/* ── Add Staff Form ──────────────────────────────────────────────── */}
-        <div className="rounded-lg border border-flora-line bg-flora-ivory p-6 shadow-lift">
+        <div className="rounded-lg border border-flora-line bg-flora-ivory p-6 shadow-lift h-fit">
           <p className="eyebrow text-flora-gold">Admin Panel</p>
           <h2 className="display-title mt-1 text-[1.3rem] text-flora-navy">Add Staff Member</h2>
           <p className="mt-1 font-sans text-[0.78rem] text-flora-grey leading-relaxed">
@@ -143,7 +175,7 @@ export default function AdminStaffPage() {
                 minLength={8}
                 autoComplete="new-password"
                 className="field text-flora-charcoal"
-                placeholder="Min. 8 characters"
+                placeholder="••••••••"
               />
             </div>
 
@@ -152,13 +184,7 @@ export default function AdminStaffPage() {
               <label htmlFor="staff-role" className="eyebrow text-flora-grey">
                 Role
               </label>
-              <select
-                id="staff-role"
-                name="role"
-                required
-                defaultValue="reception"
-                className="field text-flora-charcoal"
-              >
+              <select id="staff-role" name="role" required className="field text-flora-charcoal appearance-none bg-white">
                 <option value="reception">Reception</option>
                 <option value="admin">Admin</option>
               </select>
@@ -166,8 +192,8 @@ export default function AdminStaffPage() {
 
             {/* Feedback */}
             {formState === "success" && (
-              <p role="status" className="rounded border border-flora-sage bg-flora-sage/20 px-3 py-2 font-sans text-[0.78rem] text-flora-navy">
-                ✓ Staff account created successfully.
+              <p role="alert" className="rounded border border-flora-sage bg-flora-cream px-3 py-2 font-sans text-[0.78rem] text-flora-sage-dark">
+                ✓ Staff account created successfully
               </p>
             )}
             {formState === "error" && formError && (
@@ -187,7 +213,7 @@ export default function AdminStaffPage() {
         </div>
 
         {/* ── Staff List ──────────────────────────────────────────────────── */}
-        <div className="rounded-lg border border-flora-line bg-flora-ivory p-6 shadow-lift">
+        <div className="rounded-lg border border-flora-line bg-flora-ivory p-6 shadow-lift h-fit">
           <p className="eyebrow text-flora-gold">Current Team</p>
           <h2 className="display-title mt-1 text-[1.3rem] text-flora-navy">Staff Accounts</h2>
 
@@ -213,11 +239,12 @@ export default function AdminStaffPage() {
                     <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Email</th>
                     <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Role</th>
                     <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Added</th>
+                    <th className="pb-2"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {staffList.map((member) => (
-                    <tr key={member.id} className="border-b border-flora-line/50 hover:bg-flora-cream/40 transition-colors">
+                    <tr key={member.id} className="border-b border-flora-line/50 hover:bg-flora-cream/40 transition-colors group">
                       <td className="py-3 pr-4 text-flora-charcoal">{member.email}</td>
                       <td className="py-3 pr-4">
                         <span
@@ -236,6 +263,19 @@ export default function AdminStaffPage() {
                           month: "short",
                           year: "numeric",
                         })}
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => handleRemoveStaff(member.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-flora-grey hover:text-flora-terracotta rounded hover:bg-flora-blush"
+                          title="Remove staff member"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                          </svg>
+                        </button>
                       </td>
                     </tr>
                   ))}
