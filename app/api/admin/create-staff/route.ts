@@ -1,22 +1,57 @@
 /**
- * POST /api/admin/create-staff
+ * /api/admin/create-staff
  *
- * Creates a new Supabase Auth user and inserts a matching staff row.
- * Only authenticated admins (role = 'admin' in the staff table) may call this.
+ * GET: Returns list of all staff accounts (Admin only).
+ * POST: Creates a new Supabase Auth user and inserts matching staff row (Admin only).
  *
- * Body: { email: string; password: string; role: 'admin' | 'reception' }
- *
- * This route runs server-side only and uses the service-role key which is
- * never exposed to the browser.
+ * Runs server-side only with service-role privileges, securely verified by caller JWT.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin, assertServiceRoleConfigured } from "@/lib/supabaseServiceRole";
 import type { StaffRole } from "@/types/database";
 
-export async function POST(request: NextRequest) {
+async function verifyAdminCaller(request: NextRequest) {
+  assertServiceRoleConfigured();
+
+  const authHeader = request.headers.get("authorization");
+  const accessToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+
+  if (!accessToken) {
+    return { error: "Unauthorized — no token provided.", status: 401 };
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const callerClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // Verify the JWT with Supabase Auth
+  const { data: { user }, error: userError } = await callerClient.auth.getUser();
+  if (userError || !user) {
+    return { error: "Unauthorized — invalid session.", status: 401 };
+  }
+
+  // Check the caller's role in the staff table using supabaseAdmin (bypasses RLS on server)
+  const { data: callerStaff, error: staffError } = await supabaseAdmin
+    .from("staff")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (staffError || !callerStaff || callerStaff.role !== "admin") {
+    return { error: "Forbidden — only admins can manage staff accounts.", status: 403 };
+  }
+
+  return { user, callerStaff };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    // Guard: ensure SUPABASE_SERVICE_ROLE_KEY is configured
     try {
       assertServiceRoleConfigured();
     } catch {
@@ -26,42 +61,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 1. Verify the caller is an authenticated admin ─────────────────────
-    const authHeader = request.headers.get("authorization");
-    const accessToken = authHeader?.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : null;
-
-    if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized — no token provided." }, { status: 401 });
+    const authResult = await verifyAdminCaller(request);
+    if ("error" in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    // Use the anon key to validate the caller's JWT and look up their role.
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const callerClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    // Verify the token by fetching the current user
-    const { data: { user }, error: userError } = await callerClient.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized — invalid session." }, { status: 401 });
-    }
-
-    // Check the caller's role in the staff table
-    const { data: callerStaff, error: staffError } = await callerClient
+    const { data: staffList, error: listError } = await supabaseAdmin
       .from("staff")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (staffError || !callerStaff || callerStaff.role !== "admin") {
+    if (listError) {
+      return NextResponse.json({ error: "Failed to load staff list." }, { status: 500 });
+    }
+
+    return NextResponse.json({ staff: staffList ?? [] });
+  } catch (err) {
+    console.error("[get-staff] Unexpected error:", err);
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    try {
+      assertServiceRoleConfigured();
+    } catch {
       return NextResponse.json(
-        { error: "Forbidden — only admins can create staff accounts." },
-        { status: 403 }
+        { error: "Staff management is not yet configured — SUPABASE_SERVICE_ROLE_KEY is missing from .env.local." },
+        { status: 503 }
       );
+    }
+
+    // ── 1. Verify caller is an authenticated admin ─────────────────────────
+    const authResult = await verifyAdminCaller(request);
+    if ("error" in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
     // ── 2. Parse and validate the request body ─────────────────────────────
@@ -93,11 +128,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 3. Create the Supabase Auth user (bypasses email confirmation) ─────
+    // ── 3. Create the Supabase Auth user (email confirmed immediately) ──────
     const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim().toLowerCase(),
       password,
-      email_confirm: true, // Mark email as confirmed immediately
+      email_confirm: true,
     });
 
     if (createError || !newUserData.user) {
@@ -107,7 +142,7 @@ export async function POST(request: NextRequest) {
 
     const newUserId = newUserData.user.id;
 
-    // ── 4. Insert the staff row (service-role bypasses RLS) ────────────────
+    // ── 4. Insert the staff row ────────────────────────────────────────────
     const { error: insertError } = await supabaseAdmin
       .from("staff")
       .insert({
@@ -117,7 +152,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (insertError) {
-      // Rollback: delete the auth user so we don't leave orphaned accounts
+      // Rollback auth user if staff row fails
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
       return NextResponse.json(
         { error: "Created auth user but failed to save staff record. Rolled back." },

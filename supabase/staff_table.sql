@@ -1,9 +1,9 @@
-﻿-- ============================================================
--- Flora - Staff Table + RLS
+-- ============================================================
+-- Flora - Staff Table + Non-Recursive RLS
 -- Run this in: Supabase Dashboard -> SQL Editor
 -- ============================================================
 
--- 1. Create the staff table
+-- 1. Create the staff table (if not already created)
 CREATE TABLE IF NOT EXISTS public.staff (
   id          uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   email       text        NOT NULL,
@@ -15,66 +15,53 @@ CREATE TABLE IF NOT EXISTS public.staff (
 -- 2. Enable Row-Level Security
 ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
 
--- 3. RLS: only admins can read staff table
-CREATE POLICY "Admins can read staff"
+-- 3. Helper function: SECURITY DEFINER avoids infinite recursion in RLS
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.staff
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
+-- 4. Clean up any existing recursive policies
+DROP POLICY IF EXISTS "Admins can read staff" ON public.staff;
+DROP POLICY IF EXISTS "Admins can insert staff" ON public.staff;
+DROP POLICY IF EXISTS "Admins can update staff" ON public.staff;
+DROP POLICY IF EXISTS "Admins can delete staff" ON public.staff;
+DROP POLICY IF EXISTS "Staff can read own row" ON public.staff;
+DROP POLICY IF EXISTS "Staff and admins read policy" ON public.staff;
+DROP POLICY IF EXISTS "Admin write policy" ON public.staff;
+
+-- 5. Non-recursive Select Policy:
+-- Any logged-in user can read their own row (needed for role checks),
+-- or admins can read all rows (via security definer function).
+CREATE POLICY "Staff and admins read policy"
   ON public.staff
   FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.staff s
-      WHERE s.id = auth.uid()
-        AND s.role = 'admin'
-    )
+    id = auth.uid() OR public.is_admin()
   );
 
--- 4. RLS: only admins can insert
-CREATE POLICY "Admins can insert staff"
+-- 6. Non-recursive Modify Policy: Only admins can insert/update/delete directly
+CREATE POLICY "Admin write policy"
   ON public.staff
-  FOR INSERT
+  FOR ALL
+  USING (
+    public.is_admin()
+  )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.staff s
-      WHERE s.id = auth.uid()
-        AND s.role = 'admin'
-    )
+    public.is_admin()
   );
-
--- 5. RLS: only admins can update
-CREATE POLICY "Admins can update staff"
-  ON public.staff
-  FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.staff s
-      WHERE s.id = auth.uid()
-        AND s.role = 'admin'
-    )
-  );
-
--- 6. RLS: only admins can delete
-CREATE POLICY "Admins can delete staff"
-  ON public.staff
-  FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.staff s
-      WHERE s.id = auth.uid()
-        AND s.role = 'admin'
-    )
-  );
-
--- 7. Allow any authenticated user to read their OWN staff row
---    (needed so pages can check the current user's role)
-CREATE POLICY "Staff can read own row"
-  ON public.staff
-  FOR SELECT
-  USING (id = auth.uid());
 
 -- ============================================================
--- IMPORTANT: After running the above, insert your existing
--- admin user's row. Find your UUID in:
---   Supabase Dashboard -> Authentication -> Users
--- Then uncomment and run:
+-- IMPORTANT: Make sure your admin user is registered in the
+-- staff table. Replace with your actual UUID & email:
 -- ============================================================
 
 -- INSERT INTO public.staff (id, email, role)
@@ -83,4 +70,4 @@ CREATE POLICY "Staff can read own row"
 --   'your-admin@email.com',
 --   'admin'
 -- )
--- ON CONFLICT (id) DO NOTHING;
+-- ON CONFLICT (id) DO UPDATE SET role = 'admin';

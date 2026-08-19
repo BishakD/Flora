@@ -25,17 +25,30 @@ export default function AdminStaffPage() {
   async function loadStaff() {
     setListLoading(true);
     setListError(null);
-    const { data, error } = await supabase
-      .from("staff")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setListLoading(false);
+        return;
+      }
 
-    if (error) {
+      const res = await fetch("/api/admin/create-staff", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setListError(json.error ?? "Could not load staff list.");
+      } else {
+        setStaffList((json.staff ?? []) as Staff[]);
+      }
+    } catch {
       setListError("Could not load staff list.");
-    } else {
-      setStaffList((data ?? []) as Staff[]);
+    } finally {
+      setListLoading(false);
     }
-    setListLoading(false);
   }
 
   useEffect(() => {
