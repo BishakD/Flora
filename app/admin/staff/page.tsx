@@ -121,6 +121,7 @@ export default function AdminStaffPage() {
     setFormError(null);
 
     const formData = new FormData(event.currentTarget);
+    const name = (formData.get("name") as string).trim();
     const email = (formData.get("email") as string).trim().toLowerCase();
     const password = formData.get("password") as string;
     const role = formData.get("role") as string;
@@ -141,7 +142,7 @@ export default function AdminStaffPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ name, email, password, role }),
       });
 
       const json = await response.json();
@@ -217,6 +218,23 @@ export default function AdminStaffPage() {
           </p>
 
           <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-5">
+            {/* Full Name */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="staff-name" className="eyebrow text-flora-grey">
+                Full Name
+              </label>
+              <input
+                id="staff-name"
+                name="name"
+                type="text"
+                required
+                autoComplete="off"
+                className="field text-flora-charcoal"
+                placeholder="Jane Doe"
+                suppressHydrationWarning
+              />
+            </div>
+
             {/* Email */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="staff-email" className="eyebrow text-flora-grey">
@@ -237,7 +255,7 @@ export default function AdminStaffPage() {
             {/* Password */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="staff-password" className="eyebrow text-flora-grey">
-                Temporary Password
+                Password
               </label>
               <input
                 id="staff-password"
@@ -309,6 +327,7 @@ export default function AdminStaffPage() {
               <table className="w-full font-sans text-[0.8rem]">
                 <thead>
                   <tr className="border-b border-flora-line text-left">
+                    <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Name</th>
                     <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Email</th>
                     <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Role</th>
                     <th className="pb-2 font-medium uppercase tracking-[0.12em] text-flora-grey text-[0.62rem]">Added</th>
@@ -318,6 +337,7 @@ export default function AdminStaffPage() {
                 <tbody>
                   {staffList.map((member) => (
                     <tr key={member.id} className="border-b border-flora-line/50 hover:bg-flora-cream/40 transition-colors group">
+                      <td className="py-3 pr-4 text-flora-charcoal">{member.name || "—"}</td>
                       <td className="py-3 pr-4 text-flora-charcoal">{member.email}</td>
                       <td className="py-3 pr-4">
                         <span

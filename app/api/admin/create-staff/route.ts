@@ -179,14 +179,15 @@ export async function POST(request: NextRequest) {
 
     // 3. Parse body
     const body = await request.json();
-    const { email, password, role } = body as {
+    const { name, email, password, role } = body as {
+      name?: string;
       email?: string;
       password?: string;
       role?: string;
     };
 
-    if (!email || !password || !role) {
-      return NextResponse.json({ error: "Missing required fields: email, password, role." }, { status: 400 });
+    if (!name || !email || !password || !role) {
+      return NextResponse.json({ error: "Missing required fields: name, email, password, role." }, { status: 400 });
     }
     if (role !== "admin" && role !== "reception") {
       return NextResponse.json({ error: "Invalid role. Must be 'admin' or 'reception'." }, { status: 400 });
@@ -196,6 +197,7 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = name.trim();
 
     // 4. If adding themselves, it's already done in bootstrap
     if (user.email && normalizedEmail === user.email.toLowerCase()) {
@@ -203,10 +205,14 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: normalizedEmail,
         role: role as StaffRole,
+        name: normalizedName,
       });
       if (upsertSelfErr) {
          console.error("[create-staff POST] Error upserting self:", upsertSelfErr);
       }
+      // Try to update auth metadata too
+      await supabaseAdmin.auth.admin.updateUserById(user.id, { user_metadata: { full_name: normalizedName } });
+      
       return NextResponse.json({ ok: true, userId: user.id }, { status: 201 });
     }
 
@@ -215,6 +221,7 @@ export async function POST(request: NextRequest) {
       email: normalizedEmail,
       password,
       email_confirm: true,
+      user_metadata: { full_name: normalizedName },
     });
 
     if (createError || !newUserData.user) {
@@ -229,6 +236,7 @@ export async function POST(request: NextRequest) {
       id: newUserId,
       email: normalizedEmail,
       role: role as StaffRole,
+      name: normalizedName,
     });
 
     if (insertError) {

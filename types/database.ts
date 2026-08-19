@@ -6,6 +6,7 @@ export type StaffRole = "admin" | "reception";
 
 export interface Staff {
   id: string;
+  name?: string;
   email: string;
   role: StaffRole;
   created_at: ISODateTime;
