@@ -223,7 +223,7 @@ a {
   -webkit-mask: var(--notch-mask);
   mask: var(--notch-mask);
   filter: drop-shadow(0 4px 10px rgba(27, 42, 63, 0.20)) drop-shadow(0 1px 3px rgba(27, 42, 63, 0.12));
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+  transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
   text-decoration: none;
 }
 
@@ -240,13 +240,11 @@ a {
 
 .notched-button:hover,
 .room-title-pill:hover {
-  transform: translateY(-1px);
   filter: drop-shadow(0 7px 16px rgba(27, 42, 63, 0.28)) drop-shadow(0 2px 5px rgba(27, 42, 63, 0.16));
 }
 
 .notched-button:active,
 .room-title-pill:active {
-  transform: translateY(0);
   filter: drop-shadow(0 2px 4px rgba(27, 42, 63, 0.16));
 }
 
