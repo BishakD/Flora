@@ -31,7 +31,7 @@ export function ReceptionShell({
     <div className="min-h-screen bg-flora-cream pt-[var(--nav-height)]">
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="sticky top-[var(--nav-height)] z-10 border-b border-flora-line bg-flora-ivory/95 backdrop-blur-sm">
-        <div className="mx-auto max-w-[1440px] px-6">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
           {/* Row 1: wordmark + log-out */}
           <div className="flex items-center justify-between gap-4 py-3">
             <div>
@@ -62,7 +62,7 @@ export function ReceptionShell({
       {/* ── Page content ───────────────────────────────────────────────── */}
       <main
         id="main-content"
-        className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6"
+        className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8"
       >
         {children}
       </main>

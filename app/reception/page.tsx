@@ -613,7 +613,7 @@ export default function ReceptionDashboardPage() {
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-flora-line bg-flora-ivory shadow-soft">
-            <table className="w-full border-collapse font-sans text-[0.8rem] text-flora-charcoal">
+            <table className="w-full border-collapse font-sans text-[0.75rem] text-flora-charcoal">
               <thead>
                 <tr className="border-b border-flora-line bg-flora-cream/60 text-left">
                   {[
@@ -630,7 +630,7 @@ export default function ReceptionDashboardPage() {
                   ].map((col) => (
                     <th
                       key={col}
-                      className={`whitespace-nowrap px-4 py-3 font-sans text-[0.62rem] font-medium uppercase tracking-[0.14em] text-flora-grey ${col === "Actions" ? "text-right" : ""}`}
+                      className={`whitespace-nowrap px-2.5 py-2.5 font-sans text-[0.58rem] font-medium uppercase tracking-[0.12em] text-flora-grey ${col === "Actions" ? "text-right" : ""}`}
                     >
                       {col}
                     </th>
@@ -658,59 +658,75 @@ export default function ReceptionDashboardPage() {
                       }`}
                     >
                       {/* 1. Booked On (Date & Time) */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="font-medium text-flora-navy">
+                      <td className="px-2.5 py-2 whitespace-nowrap">
+                        <div className="font-medium text-flora-navy text-[0.75rem]">
                           {bookingTime.date}
                         </div>
-                        <div className="font-mono text-[0.72rem] text-flora-grey">
+                        <div className="font-mono text-[0.66rem] text-flora-grey">
                           {bookingTime.time}
                         </div>
                       </td>
 
                       {/* 2. Guest Name */}
-                      <td className="px-4 py-3 font-medium whitespace-nowrap text-flora-navy">
-                        {b.guest_name}
+                      <td className="px-2.5 py-2 font-medium text-flora-navy text-[0.75rem]">
+                        <div
+                          className="max-w-[110px] truncate"
+                          title={b.guest_name}
+                        >
+                          {b.guest_name}
+                        </div>
                       </td>
 
                       {/* 3. Contact Details (Email + Phone) */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="text-flora-charcoal">
+                      <td className="px-2.5 py-2">
+                        <div
+                          className="text-flora-charcoal text-[0.72rem] max-w-[130px] truncate"
+                          title={b.guest_email}
+                        >
                           {b.guest_email}
                         </div>
-                        <div className="text-flora-grey font-mono text-[0.72rem]">
-                          {b.guest_phone}
+                        <div className="text-flora-grey font-mono text-[0.66rem] whitespace-nowrap">
+                          {b.guest_phone || "—"}
                         </div>
                       </td>
 
                       {/* 4. Guests (No. of Adults & Children) */}
-                      <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
-                        <span>
+                      <td className="px-2.5 py-2 whitespace-nowrap text-flora-charcoal">
+                        <div className="text-[0.72rem] font-medium">
                           {b.adults} {b.adults === 1 ? "Adult" : "Adults"}
-                        </span>
-                        {b.children > 0 ? (
-                          <span className="text-flora-grey ml-1">
-                            · {b.children}{" "}
+                        </div>
+                        {b.children > 0 && (
+                          <div className="text-[0.66rem] text-flora-grey">
+                            +{b.children}{" "}
                             {b.children === 1 ? "Child" : "Children"}
-                          </span>
-                        ) : null}
+                          </div>
+                        )}
                       </td>
 
                       {/* 5. Check-in / Check-out Dates */}
-                      <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
-                        <span>{fmtDate(b.check_in)}</span>
-                        <span className="text-flora-grey mx-1.5">→</span>
-                        <span>{fmtDate(b.check_out)}</span>
+                      <td className="px-2.5 py-2 whitespace-nowrap text-flora-charcoal">
+                        <div className="text-[0.72rem] font-medium">
+                          {fmtDate(b.check_in)}
+                        </div>
+                        <div className="text-[0.66rem] text-flora-grey flex items-center gap-1">
+                          <span>→</span> {fmtDate(b.check_out)}
+                        </div>
                       </td>
 
                       {/* 6. Room Name */}
-                      <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
-                        {b.room_types?.name ?? "Flora Room"}
+                      <td className="px-2.5 py-2 text-flora-charcoal text-[0.72rem]">
+                        <div
+                          className="max-w-[100px] truncate"
+                          title={b.room_types?.name ?? "Flora Room"}
+                        >
+                          {b.room_types?.name ?? "Flora Room"}
+                        </div>
                       </td>
 
                       {/* 7. Booking Reference */}
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-2.5 py-2 whitespace-nowrap">
                         <span
-                          className="font-mono text-base font-bold tracking-widest text-flora-navy"
+                          className="font-mono text-[0.8rem] font-bold tracking-wider text-flora-navy"
                           title={b.id}
                         >
                           {(b as any).booking_reference ??
@@ -719,7 +735,7 @@ export default function ReceptionDashboardPage() {
                       </td>
 
                       {/* 8. Amount Paid */}
-                      <td className="px-4 py-3 whitespace-nowrap font-medium text-flora-navy">
+                      <td className="px-2.5 py-2 whitespace-nowrap font-medium text-flora-navy text-[0.75rem]">
                         {b.payment_status === "deposit_paid" ||
                         b.payment_status === "refunded"
                           ? formatMoney(depositPaidAmount, currency)
@@ -729,9 +745,9 @@ export default function ReceptionDashboardPage() {
                       </td>
 
                       {/* 9. Status */}
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-2.5 py-2 whitespace-nowrap">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 font-sans text-[0.62rem] tracking-wide ${statusInfo.className}`}
+                          className={`inline-block rounded-full px-2 py-0.5 font-sans text-[0.56rem] font-medium tracking-wide uppercase ${statusInfo.className}`}
                           title={statusInfo.description}
                         >
                           {statusInfo.label}
@@ -739,13 +755,13 @@ export default function ReceptionDashboardPage() {
                       </td>
 
                       {/* 10. Actions (Cancel & Delete) */}
-                      <td className="px-4 py-3 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-2.5 py-2 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
                             disabled={isCancelled || cancelling}
                             onClick={() => setCancelTarget(b)}
-                            className="luxury-button border-flora-rose text-flora-terracotta [--button-fill:var(--flora-blush)] [--button-ink:var(--flora-espresso)] px-3 py-1 text-[0.56rem] disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="luxury-button border-flora-rose text-flora-terracotta [--button-fill:var(--flora-blush)] [--button-ink:var(--flora-espresso)] px-2.5 py-1 text-[0.55rem] disabled:opacity-30 disabled:cursor-not-allowed"
                             aria-label={`Cancel and refund booking for ${b.guest_name}`}
                           >
                             {isCancelled ? "Cancelled" : "Cancel"}
@@ -754,14 +770,14 @@ export default function ReceptionDashboardPage() {
                             type="button"
                             disabled={deleting}
                             onClick={() => setDeleteTarget(b)}
-                            className="luxury-button border-flora-terracotta text-flora-terracotta [--button-fill:var(--flora-terracotta)] [--button-ink:var(--flora-ivory-card)] p-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="luxury-button border-flora-terracotta text-flora-terracotta [--button-fill:var(--flora-terracotta)] [--button-ink:var(--flora-ivory-card)] p-1.5 disabled:opacity-30 disabled:cursor-not-allowed"
                             aria-label={`Permanently delete booking for ${b.guest_name}`}
                             title="Delete"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              width="14"
-                              height="14"
+                              width="12"
+                              height="12"
                               viewBox="0 0 24 24"
                               fill="none"
                               stroke="currentColor"
