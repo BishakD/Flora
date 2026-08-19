@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { AdminShell } from "@/app/admin/_components/AdminShell";
 import { useAdminSession } from "@/app/admin/_lib/useAdminSession";
@@ -57,6 +57,73 @@ function DeleteStaffModal({
             {busy ? "Deleting…" : "Delete"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomRoleDropdown() {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("reception");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleOutsideClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const roles = [
+    { id: "reception", label: "Reception" },
+    { id: "admin", label: "Admin" },
+  ];
+  
+  const selected = roles.find(r => r.id === value) || roles[0];
+
+  return (
+    <div className="relative w-full" ref={containerRef}>
+      <input type="hidden" name="role" value={value} />
+      
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="field flex items-center justify-between text-left cursor-pointer appearance-none bg-transparent"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className={value ? "text-flora-charcoal" : "text-flora-warm-grey/70"}>
+          {selected.label}
+        </span>
+        <svg className={`w-4 h-4 text-flora-gold transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+
+      <div 
+        className={`absolute z-10 w-full mt-1 bg-flora-ivory border border-flora-line shadow-lift rounded-md overflow-hidden transition-all duration-200 origin-top ${
+          open ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0 pointer-events-none"
+        }`}
+        role="listbox"
+      >
+        {roles.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            className={`w-full text-left px-4 py-3 font-sans text-sm transition-colors duration-150 ${value === r.id ? 'bg-flora-cream text-flora-navy font-medium' : 'text-flora-charcoal hover:bg-flora-cream'}`}
+            role="option"
+            aria-selected={value === r.id}
+            onClick={() => {
+              setValue(r.id);
+              setOpen(false);
+            }}
+          >
+            {r.label}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -275,10 +342,7 @@ export default function AdminStaffPage() {
               <label htmlFor="staff-role" className="eyebrow text-flora-grey">
                 Role
               </label>
-              <select id="staff-role" name="role" required className="field text-flora-charcoal appearance-none bg-white">
-                <option value="reception">Reception</option>
-                <option value="admin">Admin</option>
-              </select>
+              <CustomRoleDropdown />
             </div>
 
             {/* Feedback */}
