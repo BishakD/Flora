@@ -34,7 +34,7 @@ export function InfoRequestForm() {
           <label className="block sm:col-span-2"><span className="eyebrow text-flora-grey">Email</span><input suppressHydrationWarning required name="email" type="email" autoComplete="email" className="field" /></label>
           <label className="block sm:col-span-2"><span className="eyebrow text-flora-grey">Mobile</span><input name="mobile" type="tel" autoComplete="tel" className="field" /></label>
           <label className="mt-1 flex items-start gap-3 font-sans text-[0.55rem] leading-relaxed tracking-[0.07em] text-flora-grey sm:col-span-2"><input required type="checkbox" className="mt-1 accent-flora-slate" />I agree to the final privacy notice once supplied. No information is transmitted in this prototype.</label>
-          <div className="sm:col-span-2 sm:text-center"><button type="submit" className="notched-button min-w-[142px] border border-flora-slate bg-flora-cream px-7 py-3 font-sans text-[0.58rem] uppercase tracking-[0.14em] text-flora-slate transition-colors hover:bg-flora-slate hover:text-flora-ivory">Send</button></div>
+          <div className="sm:col-span-2 sm:text-center"><button type="submit" className="notched-button relative inline-flex min-w-[142px] border border-flora-slate bg-flora-cream px-7 py-3 font-sans text-[0.58rem] uppercase tracking-[0.14em] text-flora-slate transition-colors hover:bg-flora-slate hover:text-flora-ivory">Send</button></div>
         </div>
       </div>
       {status ? <p className="mt-7 border-l-2 border-flora-blue pl-4 text-sm text-flora-slate" role="status">{status}</p> : null}

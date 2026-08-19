@@ -215,7 +215,6 @@ a {
 
 .notched-button,
 .room-title-pill {
-  position: relative;
   align-items: center;
   justify-content: center;
   isolation: isolate;

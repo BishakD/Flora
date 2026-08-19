@@ -47,7 +47,7 @@ export function Nav() {
         </div>
 
         {/* Mobile Left: Compact "Book" Button */}
-        <Link href="/booking" className="notched-button inline-flex lg:hidden col-start-1 row-start-1 min-w-[74px] justify-self-start bg-[#48667c] px-3.5 py-2 text-center font-sans text-[0.58rem] font-normal uppercase tracking-[0.18em] text-flora-gold transition-colors hover:bg-[#3f5c71] [--notch-r:7px]">
+        <Link href="/booking" className="notched-button relative inline-flex lg:hidden col-start-1 row-start-1 min-w-[74px] justify-self-start bg-[#48667c] px-3.5 py-2 text-center font-sans text-[0.58rem] font-normal uppercase tracking-[0.18em] text-flora-gold transition-colors hover:bg-[#3f5c71] [--notch-r:7px]">
           Book
         </Link>
 
@@ -60,7 +60,7 @@ export function Nav() {
         {/* Right: Desktop "BOOK NOW" & Mobile Menu Toggle */}
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-[clamp(.8rem,1.7vw,1.75rem)]">
           <Link href="/#contact" className="nav-link hidden whitespace-nowrap font-sans text-[0.58rem] font-medium uppercase tracking-[0.14em] lg:block">Contacts</Link>
-          <Link href="/booking" className="notched-button hidden lg:inline-flex min-w-[172px] bg-[#48667c] px-8 py-3 text-center font-sans text-[0.7rem] font-normal uppercase tracking-[0.24em] text-flora-gold transition-colors hover:bg-[#3f5c71] [--notch-r:11px]">
+          <Link href="/booking" className="notched-button relative hidden lg:inline-flex min-w-[172px] bg-[#48667c] px-8 py-3 text-center font-sans text-[0.7rem] font-normal uppercase tracking-[0.24em] text-flora-gold transition-colors hover:bg-[#3f5c71] [--notch-r:11px]">
             BOOK NOW
           </Link>
           <button type="button" className="flex size-10 items-center justify-center rounded-full border border-flora-line text-flora-charcoal lg:hidden" aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? "Close navigation" : "Open navigation"} onClick={() => setOpen((value) => !value)}>
