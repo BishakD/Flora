@@ -77,6 +77,8 @@ function emailWrapper({
   summaryTitle?: string;
   footerSignature?: string;
 }): string {
+  const uniqueRef = `FL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,6 +87,11 @@ function emailWrapper({
   <title>${headline} · Flora Palazzo</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f6f1e7;font-family:Georgia,serif;color:#2a2a28;line-height:1.6;-webkit-text-size-adjust:100%;">
+  <!-- Preheader to prevent email client text clipping -->
+  <div style="display:none;font-size:1px;color:#f6f1e7;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;mso-hide:all;">
+    ${headline} · Flora Palazzo Firenze
+  </div>
+
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#f6f1e7;padding:32px 16px;">
     <tr>
       <td align="center">
@@ -146,6 +153,9 @@ function emailWrapper({
               </p>
               <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;color:#d9afa8;letter-spacing:0.05em;">
                 This is an automated reservation communication from Flora.
+              </p>
+              <p style="margin:6px 0 0 0;font-family:Arial,sans-serif;font-size:9px;color:#8a7e72;letter-spacing:0.05em;">
+                ${uniqueRef}
               </p>
             </td>
           </tr>
@@ -222,11 +232,16 @@ async function sendEmail({
         },
       });
 
+      const uniqueMsgId = `<flora-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@florafirenze.com>`;
       const info = await transporter.sendMail({
         from: `Flora Palazzo <${smtpEmail}>`,
         to,
         subject,
         html,
+        messageId: uniqueMsgId,
+        headers: {
+          "X-Entity-Ref-ID": uniqueMsgId,
+        },
       });
 
       console.log(
@@ -503,7 +518,7 @@ export async function sendStaffWelcomeEmail(data: {
 
   return sendEmail({
     to: data.staffEmail,
-    subject: "Welcome to the Flora Team",
+    subject: `Welcome to the Flora Team · ${data.staffName}`,
     html,
   });
 }
@@ -535,7 +550,7 @@ export async function sendStaffRemovalEmail(data: {
 
   return sendEmail({
     to: data.staffEmail,
-    subject: "Update to your Flora Account Access",
+    subject: `Staff Access Revoked · ${data.staffName} · Flora Palazzo`,
     html,
   });
 }
