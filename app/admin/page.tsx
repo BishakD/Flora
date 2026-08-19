@@ -43,6 +43,27 @@ function fmtDate(dateStr: string) {
   }
 }
 
+function fmtBookingDateTime(dateStr?: string | null) {
+  if (!dateStr) return { date: "—", time: "" };
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return { date: dateStr, time: "" };
+    const date = new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(d);
+    const time = new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(d);
+    return { date, time };
+  } catch {
+    return { date: dateStr, time: "" };
+  }
+}
+
 function getDisplayStatus(b: BookingRow): { label: string; className: string; description?: string } {
   if (b.payment_status === "refund_failed") {
     return {
@@ -111,6 +132,7 @@ function CancelBookingModal({
           <p><span className="text-flora-grey">Guest:</span> <strong className="font-medium">{booking.guest_name}</strong></p>
           <p><span className="text-flora-grey">Room:</span> {booking.room_types?.name ?? "Flora Room"}</p>
           <p><span className="text-flora-grey">Dates:</span> {fmtDate(booking.check_in)} – {fmtDate(booking.check_out)}</p>
+          <p><span className="text-flora-grey">Booked On:</span> {fmtBookingDateTime(booking.created_at).date} · {fmtBookingDateTime(booking.created_at).time}</p>
           <p><span className="text-flora-grey">Refund Amount:</span> <strong className="text-flora-navy font-semibold">{formattedDeposit}</strong></p>
         </div>
         <p className="mt-3 font-sans text-[0.8rem] text-flora-grey leading-relaxed">
@@ -170,7 +192,8 @@ function DeleteBookingModal({
         </p>
         <div className="mt-3 rounded border border-flora-line bg-flora-cream/50 p-3 font-sans text-[0.78rem] text-flora-charcoal space-y-1">
           <p><span className="text-flora-grey">Guest:</span> <strong>{booking.guest_name}</strong></p>
-          <p><span className="text-flora-grey">Ref:</span> <span className="font-mono text-xs">{booking.id}</span></p>
+          <p><span className="text-flora-grey">Ref:</span> <span className="font-mono text-xs">{(booking as any).booking_reference ?? booking.id}</span></p>
+          <p><span className="text-flora-grey">Booked On:</span> {fmtBookingDateTime(booking.created_at).date} · {fmtBookingDateTime(booking.created_at).time}</p>
         </div>
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
@@ -212,7 +235,6 @@ export default function AdminDashboardPage() {
   const [deleteTarget, setDeleteTarget] = useState<BookingRow | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const isFetchingRef = useRef(false);
 
   // ── Fetch Bookings ─────────────────────────────────────────────────────────
@@ -243,7 +265,6 @@ export default function AdminDashboardPage() {
         }
       } else {
         setBookings((data as BookingRow[]) ?? []);
-        setLastRefreshed(new Date());
         if (isInitial) setLoadState("ready");
       }
     },
@@ -454,7 +475,7 @@ export default function AdminDashboardPage() {
       )}
 
       <AdminShell title="Bookings">
-        {/* Header Bar with Search, Live Indicator & Refresh */}
+        {/* Header Bar with Search & Live Indicator */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -488,20 +509,6 @@ export default function AdminDashboardPage() {
               )}
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            <span className="font-sans text-[0.65rem] text-flora-grey">
-              Updated {lastRefreshed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </span>
-            <button
-              type="button"
-              onClick={() => fetchBookings(false)}
-              className="font-sans text-[0.65rem] uppercase tracking-wider text-flora-slate hover:text-flora-navy border-b border-flora-slate/40 pb-0.5"
-              title="Refresh now"
-            >
-              Refresh
-            </button>
-          </div>
         </div>
 
         {filteredBookings.length === 0 ? (
@@ -528,6 +535,7 @@ export default function AdminDashboardPage() {
               <thead>
                 <tr className="border-b border-flora-line bg-flora-cream/60 text-left">
                   {[
+                    "Booked On",
                     "Guest Name",
                     "Contact Details",
                     "Guests",
@@ -557,6 +565,7 @@ export default function AdminDashboardPage() {
 
                   const statusInfo = getDisplayStatus(b);
                   const isCancelled = b.status === "cancelled" || b.payment_status === "refunded";
+                  const bookingTime = fmtBookingDateTime(b.created_at);
 
                   return (
                     <tr
@@ -565,18 +574,24 @@ export default function AdminDashboardPage() {
                         i % 2 === 0 ? "bg-flora-ivory" : "bg-flora-cream/20"
                       }`}
                     >
-                      {/* 1. Guest Name */}
+                      {/* 1. Booked On (Date & Time) */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="font-medium text-flora-navy">{bookingTime.date}</div>
+                        <div className="font-mono text-[0.72rem] text-flora-grey">{bookingTime.time}</div>
+                      </td>
+
+                      {/* 2. Guest Name */}
                       <td className="px-4 py-3 font-medium whitespace-nowrap text-flora-navy">
                         {b.guest_name}
                       </td>
 
-                      {/* 2. Contact Details (Email + Phone) */}
+                      {/* 3. Contact Details (Email + Phone) */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="text-flora-charcoal">{b.guest_email}</div>
                         <div className="text-flora-grey font-mono text-[0.72rem]">{b.guest_phone}</div>
                       </td>
 
-                      {/* 3. Guests (No. of Adults & Children) */}
+                      {/* 4. Guests (No. of Adults & Children) */}
                       <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
                         <span>{b.adults} {b.adults === 1 ? "Adult" : "Adults"}</span>
                         {b.children > 0 ? (
@@ -584,19 +599,19 @@ export default function AdminDashboardPage() {
                         ) : null}
                       </td>
 
-                      {/* 4. Check-in / Check-out Dates */}
+                      {/* 5. Check-in / Check-out Dates */}
                       <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
                         <span>{fmtDate(b.check_in)}</span>
                         <span className="text-flora-grey mx-1.5">→</span>
                         <span>{fmtDate(b.check_out)}</span>
                       </td>
 
-                      {/* 5. Room Name */}
+                      {/* 6. Room Name */}
                       <td className="px-4 py-3 whitespace-nowrap text-flora-charcoal">
                         {b.room_types?.name ?? "Flora Room"}
                       </td>
 
-                      {/* 6. Booking Reference */}
+                      {/* 7. Booking Reference */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span
                           className="font-mono text-base font-bold tracking-widest text-flora-navy"
@@ -606,7 +621,7 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
 
-                      {/* 6. Amount Paid */}
+                      {/* 8. Amount Paid */}
                       <td className="px-4 py-3 whitespace-nowrap font-medium text-flora-navy">
                         {b.payment_status === "deposit_paid" || b.payment_status === "refunded"
                           ? formatMoney(depositPaidAmount, currency)
@@ -615,7 +630,7 @@ export default function AdminDashboardPage() {
                           : "—"}
                       </td>
 
-                      {/* 7. Status */}
+                      {/* 9. Status */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span
                           className={`inline-block rounded-full px-2.5 py-0.5 font-sans text-[0.62rem] tracking-wide ${statusInfo.className}`}
@@ -625,7 +640,7 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
 
-                      {/* 8. Actions (Cancel & Delete) */}
+                      {/* 10. Actions (Cancel & Delete) */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <button
