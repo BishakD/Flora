@@ -16,28 +16,48 @@ import { supabase } from "@/lib/supabase";
  *  - SIGNED_OUT                                  → /admin/login
  *  - Has session                                 → allowed through
  */
-export function useAdminSession() {
+export function useAdminSession(allowedRoles: string[] = ["admin"], redirectUrl: string = "/admin/login") {
   const router = useRouter();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (event === "SIGNED_OUT") {
-          router.replace("/admin/login");
+          router.replace(redirectUrl);
           return;
         }
 
         if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           if (!session) {
-            router.replace("/admin/login");
+            router.replace(redirectUrl);
             return;
           }
-          // Session exists — allow through. Role verification happens
-          // server-side in the API routes, not here.
+          
+          if (allowedRoles && allowedRoles.length > 0) {
+            try {
+              const res = await fetch("/api/staff/me", {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+              });
+              const json = await res.json();
+              
+              if (!res.ok || !json.role || !allowedRoles.includes(json.role)) {
+                console.warn("[useAdminSession] Role not allowed or error:", json);
+                // If they are reception and trying to access admin, send them to reception
+                if (json.role === "reception" && redirectUrl === "/admin/login") {
+                   router.replace("/reception");
+                } else {
+                   router.replace(redirectUrl);
+                }
+              }
+            } catch (err) {
+              console.error("[useAdminSession] Error checking role:", err);
+              router.replace(redirectUrl);
+            }
+          }
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, allowedRoles, redirectUrl]);
 }

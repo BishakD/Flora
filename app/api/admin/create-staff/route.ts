@@ -12,7 +12,7 @@ import type { StaffRole } from "@/types/database";
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
 
-async function getCallerUser(request: NextRequest) {
+export async function getCallerUser(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!accessToken) return null;

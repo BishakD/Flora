@@ -16,6 +16,8 @@ interface AdminShellProps {
   title: string;
   /** Optional eyebrow above the heading */
   eyebrow?: string;
+  /** Override default navigation links */
+  navLinks?: { href: string; label: string }[];
   children: React.ReactNode;
 }
 
@@ -25,7 +27,7 @@ interface AdminShellProps {
  *  - Horizontal nav linking to Bookings / Room Types / Rate Plans
  *  - Main content area
  */
-export function AdminShell({ title, eyebrow = "Flora · Firenze", children }: AdminShellProps) {
+export function AdminShell({ title, eyebrow = "Flora · Firenze", navLinks = NAV_LINKS as any, children }: AdminShellProps) {
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -62,24 +64,21 @@ export function AdminShell({ title, eyebrow = "Flora · Firenze", children }: Ad
             </button>
           </div>
 
-          {/* Row 2: section nav */}
-          <nav
-            aria-label="Admin navigation"
-            className="flex gap-1 pb-0"
-          >
-            {NAV_LINKS.map(({ href, label }) => {
-              const active = isActive(href);
+          {/* Row 2: nav links */}
+          <nav className="-mb-px mt-6 flex flex-wrap gap-8">
+            {navLinks.map((link: { href: string; label: string }) => {
+              const active = isActive(link.href);
               return (
                 <Link
-                  key={href}
-                  href={href}
+                  key={link.href}
+                  href={link.href}
                   className={`relative px-3 py-2 font-sans text-[0.62rem] font-medium uppercase tracking-[0.14em] transition-colors duration-150
                     ${active
                       ? "text-flora-navy after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-flora-gold"
                       : "text-flora-grey hover:text-flora-navy"
                     }`}
                 >
-                  {label}
+                  {link.label}
                 </Link>
               );
             })}
