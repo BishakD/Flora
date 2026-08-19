@@ -2,6 +2,15 @@ export type ISODate = string;
 export type ISODateTime = string;
 export type BookingStatus = "pending" | "confirmed" | "cancelled";
 export type PaymentStatus = "unpaid" | "awaiting_payment" | "deposit_paid" | "refunded" | "refund_failed";
+export type StaffRole = "admin" | "reception";
+
+export interface Staff {
+  id: string;
+  email: string;
+  role: StaffRole;
+  created_at: ISODateTime;
+}
+
 
 export interface RoomType {
   id: string;
@@ -118,6 +127,13 @@ export interface Database {
           },
         ];
       };
+      staff: {
+        Row: Staff & Record<string, unknown>;
+        Insert: Omit<Staff, "created_at"> & { created_at?: ISODateTime } & Record<string, unknown>;
+        Update: Partial<Omit<Staff, "id">> & Record<string, unknown>;
+        Relationships: [];
+      };
+
     };
     Views: Record<string, never>;
     Functions: {

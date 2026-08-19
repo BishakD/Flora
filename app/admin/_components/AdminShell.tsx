@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/admin",            label: "Bookings"   },
   { href: "/admin/room-types", label: "Room Types" },
   { href: "/admin/rate-plans", label: "Rate Plans" },
+  { href: "/admin/staff",      label: "Staff"      },
 ] as const;
 
 interface AdminShellProps {
