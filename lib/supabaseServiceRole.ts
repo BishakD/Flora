@@ -24,6 +24,11 @@ export const supabaseAdmin = createClient<Database>(resolvedUrl, resolvedKey, {
     autoRefreshToken: false,
     persistSession: false,
   },
+  global: {
+    headers: {
+      Authorization: `Bearer ${resolvedKey}`,
+    },
+  },
 });
 
 /** Call this inside route handlers to guard against missing env vars at runtime. */
