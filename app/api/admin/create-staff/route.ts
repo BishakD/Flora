@@ -5,13 +5,20 @@
  * POST: Creates a new Supabase Auth user and inserts matching staff row (Admin only).
  *
  * Runs server-side only with service-role privileges, securely verified by caller JWT.
+ *
+ * BOOTSTRAP MODE: If the staff table has zero rows, the first authenticated Supabase
+ * user is treated as admin so they can seed the table. Once any admin row exists,
+ * normal role-checking applies.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin, assertServiceRoleConfigured } from "@/lib/supabaseServiceRole";
 import type { StaffRole } from "@/types/database";
 
-async function verifyAdminCaller(request: NextRequest) {
+async function verifyAdminCaller(request: NextRequest): Promise<
+  | { error: string; status: number }
+  | { user: { id: string; email?: string }; isBootstrap: boolean }
+> {
   assertServiceRoleConfigured();
 
   const authHeader = request.headers.get("authorization");
@@ -36,7 +43,20 @@ async function verifyAdminCaller(request: NextRequest) {
     return { error: "Unauthorized — invalid session.", status: 401 };
   }
 
-  // Check the caller's role in the staff table using supabaseAdmin (bypasses RLS on server)
+  // ── Check how many admin rows exist (service-role, bypasses RLS) ──────────
+  const { count: adminCount, error: countError } = await supabaseAdmin
+    .from("staff")
+    .select("*", { count: "exact", head: true })
+    .eq("role", "admin");
+
+  // If the table is completely empty (no admin rows at all) → bootstrap mode.
+  // Allow the authenticated user through so they can create the first admin row.
+  if (!countError && adminCount === 0) {
+    console.log("[create-staff] Bootstrap mode: no admin rows found, allowing authenticated user.");
+    return { user, isBootstrap: true };
+  }
+
+  // ── Normal mode: check if this specific user is an admin ─────────────────
   const { data: callerStaff, error: staffError } = await supabaseAdmin
     .from("staff")
     .select("role")
@@ -47,7 +67,7 @@ async function verifyAdminCaller(request: NextRequest) {
     return { error: "Forbidden — only admins can manage staff accounts.", status: 403 };
   }
 
-  return { user, callerStaff };
+  return { user, isBootstrap: false };
 }
 
 export async function GET(request: NextRequest) {
@@ -93,7 +113,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 1. Verify caller is an authenticated admin ─────────────────────────
+    // ── 1. Verify caller is an authenticated admin (or bootstrap user) ─────
     const authResult = await verifyAdminCaller(request);
     if ("error" in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
@@ -128,9 +148,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // ── BOOTSTRAP SPECIAL CASE: Register the current caller themselves ──────
+    // In bootstrap mode, if the caller is trying to add themselves as admin,
+    // use their existing auth ID rather than creating a duplicate user.
+    if (authResult.isBootstrap && normalizedEmail === authResult.user.email?.toLowerCase()) {
+      const { error: insertError } = await supabaseAdmin
+        .from("staff")
+        .insert({
+          id: authResult.user.id,
+          email: normalizedEmail,
+          role: role as StaffRole,
+        });
+
+      if (insertError && !insertError.message.includes("duplicate")) {
+        return NextResponse.json(
+          { error: "Failed to register admin in staff table: " + insertError.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ ok: true, userId: authResult.user.id }, { status: 201 });
+    }
+
     // ── 3. Create the Supabase Auth user (email confirmed immediately) ──────
     const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       password,
       email_confirm: true,
     });
@@ -147,7 +191,7 @@ export async function POST(request: NextRequest) {
       .from("staff")
       .insert({
         id: newUserId,
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         role: role as StaffRole,
       });
 
