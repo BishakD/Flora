@@ -63,7 +63,7 @@ export function AdminShell({
             <div className="flex items-center gap-3">
               <Link
                 href="/staff"
-                className="font-sans text-[0.62rem] uppercase tracking-[0.14em] text-flora-grey hover:text-flora-navy transition-colors"
+                className="luxury-button border-flora-line text-flora-grey hover:border-flora-navy [--button-fill:var(--flora-navy)] [--button-ink:var(--flora-ivory-card)] inline-flex items-center"
               >
                 ← Portal
               </Link>
