@@ -21,23 +21,14 @@ export default function AdminStaffPage() {
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
-  // Load existing staff on mount
-  async function loadStaff() {
+  // Load existing staff — called once we have a confirmed session token
+  async function loadStaff(accessToken: string) {
     setListLoading(true);
     setListError(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setListLoading(false);
-        return;
-      }
-
       const res = await fetch("/api/admin/create-staff", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-
       const json = await res.json();
       if (!res.ok || json.error) {
         setListError(json.error ?? "Could not load staff list.");
@@ -51,8 +42,17 @@ export default function AdminStaffPage() {
     }
   }
 
+  // Wait for auth state to fully restore before calling the API
   useEffect(() => {
-    loadStaff();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if ((event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+          loadStaff(session.access_token);
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Form submit ───────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ export default function AdminStaffPage() {
     const form = event.currentTarget;
 
     startTransition(async () => {
-      // Get the current session token to authenticate the API call
+      // Use getUser() to get a fresh, validated token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setFormError("Your session has expired. Please log in again.");
@@ -93,8 +93,8 @@ export default function AdminStaffPage() {
       } else {
         setFormState("success");
         form.reset();
-        // Refresh the staff list
-        await loadStaff();
+        // Refresh staff list with fresh token
+        await loadStaff(session.access_token);
       }
     });
   }
