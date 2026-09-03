@@ -32,11 +32,11 @@ export function ScrollRevealText({ children, className = "", dark = false }: Scr
       const desktop = window.matchMedia("(min-width: 768px)").matches;
 
       if (desktop) {
-        gsap.set(wordNodes, { opacity: 0.12, filter: "blur(2.8px)" });
+        gsap.set(wordNodes, { opacity: 0.14, y: 2 });
         const tween = gsap.to(wordNodes, {
           opacity: 1,
-          filter: "blur(0px)",
-          stagger: 0.055,
+          y: 0,
+          stagger: 0.05,
           ease: "none",
           scrollTrigger: {
             trigger: root.current,
@@ -44,6 +44,10 @@ export function ScrollRevealText({ children, className = "", dark = false }: Scr
             end: "bottom 38%",
             scrub: 0.45,
             invalidateOnRefresh: true,
+            onEnter: () => gsap.set(wordNodes, { willChange: "opacity, transform" }),
+            onLeave: () => gsap.set(wordNodes, { willChange: "auto" }),
+            onEnterBack: () => gsap.set(wordNodes, { willChange: "opacity, transform" }),
+            onLeaveBack: () => gsap.set(wordNodes, { willChange: "auto" }),
           },
         });
         cleanup = () => {
@@ -51,10 +55,9 @@ export function ScrollRevealText({ children, className = "", dark = false }: Scr
           tween.kill();
         };
       } else {
-        gsap.set(wordNodes, { opacity: 0.14, filter: "blur(2px)", y: 4 });
+        gsap.set(wordNodes, { opacity: 0.14, y: 4 });
         const tween = gsap.to(wordNodes, {
           opacity: 1,
-          filter: "blur(0px)",
           y: 0,
           duration: 0.45,
           stagger: 0.028,
@@ -63,6 +66,10 @@ export function ScrollRevealText({ children, className = "", dark = false }: Scr
             trigger: root.current,
             start: "top 84%",
             once: true,
+            onEnter: () => gsap.set(wordNodes, { willChange: "opacity, transform" }),
+          },
+          onComplete: () => {
+            gsap.set(wordNodes, { willChange: "auto" });
           },
         });
         cleanup = () => {
@@ -78,7 +85,7 @@ export function ScrollRevealText({ children, className = "", dark = false }: Scr
   return (
     <p ref={root} className={`${dark ? "text-flora-cream" : "text-flora-charcoal"} ${className}`}>
       {words.map((word, index) => (
-        <span key={`${word}-${index}`} data-reveal-word className="inline-block will-change-[opacity,filter]">
+        <span key={`${word}-${index}`} data-reveal-word className="inline-block">
           {word}
           {index < words.length - 1 ? "\u00A0" : ""}
         </span>
@@ -112,6 +119,10 @@ export function SectionTitleScript({ children, className = "", as = "h2" }: Sect
         end: "center center",
         scrub: true,
         invalidateOnRefresh: true,
+        onEnter: () => gsap.set(title, { willChange: "clip-path" }),
+        onLeave: () => gsap.set(title, { willChange: "auto" }),
+        onEnterBack: () => gsap.set(title, { willChange: "clip-path" }),
+        onLeaveBack: () => gsap.set(title, { willChange: "auto" }),
       },
     });
 
@@ -126,7 +137,7 @@ export function SectionTitleScript({ children, className = "", as = "h2" }: Sect
       className={`script-title relative ${className}`}
     >
       <span className="script-swash" aria-hidden="true" />
-      <span ref={ink} className="relative z-[1] block will-change-[clip-path]">{children}</span>
+      <span ref={ink} className="relative z-[1] block">{children}</span>
     </Tag>
   );
 }
@@ -171,38 +182,37 @@ export function ParallaxImage({
     if (!wrap.current || !image.current || reduced) return;
     gsap.registerPlugin(ScrollTrigger);
 
-    const parallax = gsap.fromTo(
+    const tween = gsap.fromTo(
       image.current,
-      { yPercent: -6, scale: 1.02 },
+      { yPercent: -6, scale: 1.02, opacity: 0.72 },
       {
         yPercent: 6,
         scale: 1.045,
-        ease: "none",
-        scrollTrigger: { trigger: wrap.current, start: "top bottom", end: "bottom top", scrub: 0.6 },
-      },
-    );
-    const reveal = gsap.fromTo(
-      image.current,
-      { filter: "blur(14px)", opacity: 0.72 },
-      {
-        filter: "blur(0px)",
         opacity: 1,
         ease: "none",
-        scrollTrigger: { trigger: wrap.current, start: "top 96%", end: "top 56%", scrub: 0.35, invalidateOnRefresh: true },
+        scrollTrigger: {
+          trigger: wrap.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 0.5,
+          invalidateOnRefresh: true,
+          onEnter: () => gsap.set(image.current, { willChange: "transform, opacity" }),
+          onLeave: () => gsap.set(image.current, { willChange: "auto" }),
+          onEnterBack: () => gsap.set(image.current, { willChange: "transform, opacity" }),
+          onLeaveBack: () => gsap.set(image.current, { willChange: "auto" }),
+        },
       },
     );
 
     return () => {
-      parallax.scrollTrigger?.kill();
-      parallax.kill();
-      reveal.scrollTrigger?.kill();
-      reveal.kill();
+      tween.scrollTrigger?.kill();
+      tween.kill();
     };
   }, [reduced]);
 
   return (
     <div ref={wrap} className={`relative overflow-hidden ${className}`}>
-      <div ref={image} className="absolute -inset-[8%] will-change-transform">
+      <div ref={image} className="absolute -inset-[8%]">
         <Image src={src} alt={alt} fill sizes={sizes} preload={priority} className={`object-cover ${imageClassName}`} />
       </div>
     </div>
@@ -226,11 +236,8 @@ export function BlurRevealImage({
     if (!wrap.current || !image.current || reduced) return;
     gsap.registerPlugin(ScrollTrigger);
 
-    // Animate opacity + scale only — filter:blur() forces paint per frame and
-    // is not composited. Opacity and transform are both compositor-layer operations.
-    gsap.set(image.current, { filter: "blur(16px)", opacity: 0.66, scale: 1.045 });
-    const reveal = gsap.to(image.current, {
-      filter: "blur(0px)",
+    gsap.set(image.current, { opacity: 0.45, scale: 1.04 });
+    const tween = gsap.to(image.current, {
       opacity: 1,
       scale: 1,
       ease: "none",
@@ -240,12 +247,16 @@ export function BlurRevealImage({
         end: "top 56%",
         scrub: 0.35,
         invalidateOnRefresh: true,
+        onEnter: () => gsap.set(image.current, { willChange: "transform, opacity" }),
+        onLeave: () => gsap.set(image.current, { willChange: "auto" }),
+        onEnterBack: () => gsap.set(image.current, { willChange: "transform, opacity" }),
+        onLeaveBack: () => gsap.set(image.current, { willChange: "auto" }),
       },
     });
 
     return () => {
-      reveal.scrollTrigger?.kill();
-      reveal.kill();
+      tween.scrollTrigger?.kill();
+      tween.kill();
     };
   }, [reduced]);
 
@@ -253,7 +264,7 @@ export function BlurRevealImage({
     <div ref={wrap} className={`relative ${isArch ? "isolate" : "overflow-hidden"} ${className}`}>
       <div
         ref={image}
-        className={`absolute inset-0 will-change-[filter,transform,opacity] ${
+        className={`absolute inset-0 ${
           isArch ? "arch-frame-inner overflow-hidden" : ""
         }`}
       >

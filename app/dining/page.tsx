@@ -32,7 +32,7 @@ export default function DiningPage() {
               Flora’s dining collection is imagined as a sequence of moods: a garden hidden from the street, a blue salon alive with music, and a rooftop held beneath the Florentine sky. Menus, opening hours and reservation partners remain placeholders until the operating team confirms them.
             </ScrollRevealText>
           </div>
-          <BlurRevealImage src="/images/dining-01.jpg" alt="An elegant table set for dinner, editorial placeholder" className="arch-frame aspect-[0.86] w-full max-w-[620px] justify-self-end" />
+          <BlurRevealImage src="/images/dining-01.jpg" alt="An elegant table set for dinner, editorial placeholder" className="arch-frame aspect-[0.86] w-full max-w-[620px] justify-self-end" sizes="(min-width: 1024px) 620px, 92vw" />
         </div>
       </section>
 
@@ -49,9 +49,9 @@ export default function DiningPage() {
               <a href="#dining-request" className="luxury-button mt-8 border-flora-gold text-flora-gold [--button-fill:var(--flora-gold)] [--button-ink:var(--flora-navy)]">Request a table</a>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <BlurRevealImage src="/images/dining-02.jpg" alt="Dark restaurant with warm brass accents, placeholder for Segreto" className="col-span-2 aspect-[1.45]" />
-              <BlurRevealImage src="/images/dining-06.jpg" alt="A cocktail poured over hand-cut ice" className="aspect-[0.8]" />
-              <BlurRevealImage src="/images/dining-07.jpg" alt="A refined dining detail, editorial placeholder" className="mt-16 aspect-[0.8]" />
+              <BlurRevealImage src="/images/dining-02.jpg" alt="Dark restaurant with warm brass accents, placeholder for Segreto" className="col-span-2 aspect-[1.45]" sizes="(min-width: 1024px) 520px, 92vw" />
+              <BlurRevealImage src="/images/dining-06.jpg" alt="A cocktail poured over hand-cut ice" className="aspect-[0.8]" sizes="(min-width: 1024px) 260px, 45vw" />
+              <BlurRevealImage src="/images/dining-07.jpg" alt="A refined dining detail, editorial placeholder" className="mt-16 aspect-[0.8]" sizes="(min-width: 1024px) 260px, 45vw" />
             </div>
           </div>
         </div>
@@ -67,8 +67,8 @@ export default function DiningPage() {
             </ScrollRevealText>
           </div>
           <div className="mt-16 grid gap-4 md:grid-cols-[1.25fr_0.75fr]">
-            <BlurRevealImage src="/images/dining-05.jpg" alt="A candlelit lounge, placeholder for the Sala della Musica" className="aspect-[1.45]" />
-            <BlurRevealImage src="/images/dining-08.jpg" alt="A plated seasonal dish, editorial placeholder" className="aspect-[0.95]" />
+            <BlurRevealImage src="/images/dining-05.jpg" alt="A candlelit lounge, placeholder for the Sala della Musica" className="aspect-[1.45]" sizes="(min-width: 768px) 640px, 92vw" />
+            <BlurRevealImage src="/images/dining-08.jpg" alt="A plated seasonal dish, editorial placeholder" className="aspect-[0.95]" sizes="(min-width: 768px) 400px, 92vw" />
           </div>
         </div>
       </section>

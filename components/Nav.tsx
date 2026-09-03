@@ -19,10 +19,27 @@ export function Nav() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
+    let lastScrolled = window.scrollY > 24;
+    setScrolled(lastScrolled);
+
+    let rafId = 0;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        const isScrolled = window.scrollY > 24;
+        if (isScrolled !== lastScrolled) {
+          lastScrolled = isScrolled;
+          setScrolled(isScrolled);
+        }
+        rafId = 0;
+      });
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   useEffect(() => setOpen(false), [pathname]);

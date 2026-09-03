@@ -25,7 +25,7 @@ export default function SpaPage() {
             <SectionTitleScript as="h1" className="script-no-swash mt-3 text-[clamp(5.8rem,15vw,11rem)]">The Spa</SectionTitleScript>
             <p className="mt-7 max-w-xl text-[clamp(1.3rem,2.3vw,2rem)] leading-relaxed text-flora-slate">A quiet architecture of stone, linen, warmth and time.</p>
           </div>
-          <BlurRevealImage src="/images/spa-palazzo.jpg" alt="A softly illuminated arched treatment room in pale mineral plaster" className="arch-frame mx-auto aspect-[0.74] w-full max-w-[500px]" priority />
+          <BlurRevealImage src="/images/spa-palazzo.jpg" alt="A softly illuminated arched treatment room in pale mineral plaster" className="arch-frame mx-auto aspect-[0.74] w-full max-w-[500px]" sizes="(min-width: 768px) 500px, 92vw" priority />
         </div>
       </section>
 
@@ -38,7 +38,7 @@ export default function SpaPage() {
               Flora’s wellness rooms are imagined as a sensory counterpoint to the city: pale mineral surfaces, warm brass sconces, folded white linen and treatments guided by how the guest arrives that day. Final treatment names, durations and practitioners remain to be confirmed.
             </ScrollRevealText>
           </div>
-          <BlurRevealImage src="/images/spa-05.jpg" alt="Botanical oils and candlelight prepared for a wellness ritual" className="arch-frame aspect-[0.82] w-full max-w-[600px] justify-self-end" />
+          <BlurRevealImage src="/images/spa-05.jpg" alt="Botanical oils and candlelight prepared for a wellness ritual" className="arch-frame aspect-[0.82] w-full max-w-[600px] justify-self-end" sizes="(min-width: 1024px) 600px, 92vw" />
         </div>
       </section>
 
@@ -46,9 +46,9 @@ export default function SpaPage() {
         <div className="container-shell">
           <div className="grid items-end gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
             <div className="grid grid-cols-2 gap-4">
-              <BlurRevealImage src="/images/spa-01.jpg" alt="Fresh linen, candlelight and flowers prepared for a treatment" className="col-span-2 aspect-[1.5]" imageClassName="object-[center_58%]" />
-              <BlurRevealImage src="/images/spa-01.jpg" alt="Folded towel and floral spa detail" className="aspect-[0.9]" />
-              <BlurRevealImage src="/images/spa-03.jpg" alt="Hot stone wellness ritual" className="mt-16 aspect-[0.9]" />
+              <BlurRevealImage src="/images/spa-01.jpg" alt="Fresh linen, candlelight and flowers prepared for a treatment" className="col-span-2 aspect-[1.5]" sizes="(min-width: 1024px) 520px, 92vw" imageClassName="object-[center_58%]" />
+              <BlurRevealImage src="/images/spa-01.jpg" alt="Folded towel and floral spa detail" className="aspect-[0.9]" sizes="(min-width: 1024px) 250px, 45vw" />
+              <BlurRevealImage src="/images/spa-03.jpg" alt="Hot stone wellness ritual" className="mt-16 aspect-[0.9]" sizes="(min-width: 1024px) 250px, 45vw" />
             </div>
             <div className="lg:pb-12">
               <p className="eyebrow text-flora-gold">The material of calm</p>

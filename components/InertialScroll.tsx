@@ -14,8 +14,6 @@ function canScrollWithin(target: EventTarget | null, delta: number) {
   let element = target instanceof Element ? target : null;
 
   while (element && element !== document.body) {
-    // Cache getComputedStyle per element — calling it inside a wheel handler
-    // on every event causes forced style recalculations (layout thrashing).
     const styles = getComputedStyle(element);
     const scrollable = /(auto|scroll|overlay)/.test(styles.overflowY) && element.scrollHeight > element.clientHeight + 1;
 
@@ -40,6 +38,7 @@ export function InertialScroll() {
     let frame = 0;
     let previousTime = 0;
     let running = false;
+    let listenersAttached = false;
 
     const maxScroll = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
@@ -50,12 +49,6 @@ export function InertialScroll() {
       previousTime = 0;
       current = window.scrollY;
       target = current;
-    };
-
-    const syncPreference = () => {
-      const enabled = finePointer.matches && !reducedMotion.matches;
-      document.documentElement.dataset.inertialScroll = enabled ? "enabled" : "native";
-      if (!enabled && running) stop();
     };
 
     const step = (time: number) => {
@@ -114,22 +107,44 @@ export function InertialScroll() {
       target = clamp(target, 0, limit);
     };
 
-    syncPreference();
-    window.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("scroll", onNativeScroll, { passive: true });
-    window.addEventListener("resize", onResize, { passive: true });
-    window.addEventListener("pointerdown", stop, { passive: true });
-    window.addEventListener("keydown", stop, { passive: true });
-    reducedMotion.addEventListener("change", syncPreference);
-    finePointer.addEventListener("change", syncPreference);
+    const attachListeners = () => {
+      if (listenersAttached) return;
+      window.addEventListener("wheel", onWheel, { passive: false });
+      window.addEventListener("scroll", onNativeScroll, { passive: true });
+      window.addEventListener("resize", onResize, { passive: true });
+      window.addEventListener("pointerdown", stop, { passive: true });
+      window.addEventListener("keydown", stop, { passive: true });
+      listenersAttached = true;
+    };
 
-    return () => {
-      stop();
+    const detachListeners = () => {
+      if (!listenersAttached) return;
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("scroll", onNativeScroll);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointerdown", stop);
       window.removeEventListener("keydown", stop);
+      listenersAttached = false;
+    };
+
+    const syncPreference = () => {
+      const enabled = finePointer.matches && !reducedMotion.matches;
+      document.documentElement.dataset.inertialScroll = enabled ? "enabled" : "native";
+      if (enabled) {
+        attachListeners();
+      } else {
+        if (running) stop();
+        detachListeners();
+      }
+    };
+
+    syncPreference();
+    reducedMotion.addEventListener("change", syncPreference);
+    finePointer.addEventListener("change", syncPreference);
+
+    return () => {
+      stop();
+      detachListeners();
       reducedMotion.removeEventListener("change", syncPreference);
       finePointer.removeEventListener("change", syncPreference);
       delete document.documentElement.dataset.inertialScroll;
